@@ -12,7 +12,20 @@
           "package_name": "com.example.eduvian"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "555917250222-bf2mdqq53730godmoihu0siq0gsndr1l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.eduvian",
+            "certificate_hash": "2fb3ffaa0bba622ba1bf621c17412e3ad4f7693d"
+          }
+        },
+        {
+          "client_id": "555917250222-g60nkb6h0dcpqi7fnrre60pvlv7voe74.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDJBi0GdGMFmdTERABf_OsdpA69smXU-sg"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "555917250222-g60nkb6h0dcpqi7fnrre60pvlv7voe74.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "555917250222-mtkkslmodslb3p9rhgglar0hs5pk8brq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.eduvian"
+              }
+            }
+          ]
         }
       }
     }
