@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../core/auth_service.dart';
 import '../model/widgets.dart';
@@ -14,140 +16,98 @@ class HomeScreen extends ConsumerWidget {
     final user = authState.asData?.value;
     final isLoggedIn = user != null;
 
-    return Scaffold(
-      backgroundColor: primaryColor,
-      appBar: AppBar(
-        backgroundColor: primaryColor,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          'EDUvian',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          if (isLoggedIn)
-            // ── Avatar + popup menu when logged in ────────────────────────
-            PopupMenuButton<String>(
-              icon: const Icon(
-                Icons.account_circle,
-                color: Colors.white,
-                size: 28,
-              ),
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              onSelected: (value) async {
-                if (value == 'logout') {
-                  await ref.read(authServiceProvider).signOut();
-                  if (context.mounted) context.go('/login');
-                }
-              },
-              itemBuilder: (_) => [
-                // User info header (non-interactive)
-                PopupMenuItem<String>(
-                  enabled: false,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.displayName?.isNotEmpty == true
-                            ? user.displayName!
-                            : 'User',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF333333),
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        user.email ?? '',
-                        style: const TextStyle(
-                          color: Color(0xFF888888),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const Divider(height: 16),
-                    ],
-                  ),
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            'EDUvian',
+            style: GoogleFonts.poppins(
+              color: primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 26,
+              letterSpacing: 1.2,
+            ),
+          ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
+          centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: IconButton(
+                onPressed: () => context.push('/settings'),
+                icon: Icon(
+                  Icons.settings_rounded,
+                  color: isDark(context) ? Colors.white : primaryColor,
+                  size: 28,
                 ),
-                // Logout item
-                const PopupMenuItem<String>(
-                  value: 'logout',
-                  child: Row(
+              ).animate().scale(delay: 200.ms),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+                Text(
+                  "Welcome to your\nAcademic Portal",
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: isDark(context) ? Colors.white : primaryColor,
+                    height: 1.2,
+                  ),
+                ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1),
+                const SizedBox(height: 10),
+                Text(
+                  "What would you like to calculate today?",
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: isDark(context) ? Colors.white70 : Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
+                const SizedBox(height: 40),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 0.85,
                     children: [
-                      Icon(
-                        Icons.logout,
-                        color: primaryColor,
-                        size: 20,
+                      _buildLargeCard(
+                        context,
+                        icon: Icons.attach_money_rounded,
+                        label: 'Credit &\nCost',
+                        color: const Color(0xFFE84545),
+                        onTap: '/credit',
+                        delay: 300,
                       ),
-                      SizedBox(width: 10),
-                      Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      _buildLargeCard(
+                        context,
+                        icon: Icons.school_rounded,
+                        label: 'GPA\nCalculator',
+                        color: const Color(0xFF2B2E4A),
+                        onTap: '/gpa',
+                        delay: 400,
+                      ),
+                      _buildLargeCard(
+                        context,
+                        icon: Icons.workspace_premium_rounded,
+                        label: 'CGPA\nCalculator',
+                        color: const Color(0xFF903749),
+                        onTap: '/cgpa',
+                        delay: 500,
                       ),
                     ],
                   ),
                 ),
               ],
-            )
-          else
-            // ── Login button when not logged in ───────────────────────────
-            TextButton.icon(
-              onPressed: () => context.push('/login'),
-              icon: const Icon(Icons.login, color: Colors.white, size: 20),
-              label: const Text(
-                'Login',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: offWhite,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Center(
-              child: Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  _buildSmallButton(
-                    context,
-                    icon: Icons.calculate,
-                    label: 'Credit & Cost Calculator',
-                    color: primaryColor,
-                    onTap: '/credit',
-                  ),
-                  _buildSmallButton(
-                    context,
-                    icon: Icons.calculate,
-                    label: 'GPA Calculator',
-                    color: primaryColor,
-                    onTap: '/gpa',
-                  ),
-                  _buildSmallButton(
-                    context,
-                    icon: Icons.calculate,
-                    label: 'CGPA Calculator',
-                    color: primaryColor,
-                    onTap: '/cgpa',
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -155,52 +115,47 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSmallButton(
+  Widget _buildLargeCard(
     BuildContext context, {
     required IconData icon,
     required String label,
     required Color color,
     required String onTap,
+    required int delay,
   }) {
     return GestureDetector(
       onTap: () => context.push(onTap),
-      child: Container(
-        width: MediaQuery.of(context).size.width / 2 - 30,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.25),
-              blurRadius: 4,
-              offset: const Offset(2, 2),
+      child: GlassContainer(
+        blur: 20,
+        alpha: 0.6,
+        borderRadius: BorderRadius.circular(24),
+        padding: const EdgeInsets.all(20),
+        borderColor: Colors.white.withValues(alpha: 0.8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 36, color: color),
+            ),
+            const Spacer(),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                color: isDark(context) ? Colors.white : Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                height: 1.2,
+              ),
             ),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 30, color: Colors.white),
-              const SizedBox(width: 5),
-              Expanded(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      ).animate().fadeIn(delay: delay.ms).slideY(begin: 0.2).shimmer(delay: (delay + 500).ms, duration: 1000.ms, color: Colors.white.withValues(alpha: 0.5)),
     );
   }
 }

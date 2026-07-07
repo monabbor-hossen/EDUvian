@@ -3,6 +3,7 @@ import 'package:eduvian/screen/cgpa.dart';
 import 'package:eduvian/screen/gpa.dart';
 import 'package:eduvian/screen/home.dart';
 import 'package:eduvian/screen/login.dart';
+import 'package:eduvian/screen/settings.dart';
 import 'package:eduvian/screen/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,6 +33,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
       GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(
         path: '/credit',
         builder: (context, state) => const CreditCalculation(),

@@ -1,47 +1,175 @@
+import 'dart:ui';
 import 'package:eduvian/model/ArrowTooltip.dart';
 import 'package:eduvian/screen/gpa.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'department.dart';
 
-class RoundedField extends StatelessWidget {
-  final Widget child;
-  const RoundedField({Key? key, required this.child}) : super(key: key);
+// ==========================================
+// NEW DESIGN SYSTEM (Glassmorphism & Gradients)
+// ==========================================
+bool isDark(BuildContext context) => Theme.of(context).brightness == Brightness.dark;
 
+const primaryColor = Color.fromRGBO(107, 0, 50, 1);
+const secondaryColor = Color.fromRGBO(209, 61, 89, 1); // vibrant maroon accent
+const offWhite = Color.fromRGBO(255, 249, 242, 1);
+final glassWhite = Colors.white.withValues(alpha: 0.4);
+final glassShadow = Colors.black.withValues(alpha: 0.05);
+
+class AppBackground extends StatelessWidget {
+  final Widget child;
+  const AppBackground({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
+    final dark = isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: offWhite,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12.withValues(alpha: 0.25),
-            offset: Offset(0.1, 0.2),
-            blurRadius: 4,
-          ),
-        ],
-        borderRadius: BorderRadius.circular(10),
+        color: dark ? const Color(0xFF121212) : null,
+        gradient: dark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF1E1E24), // Midnight Charcoal
+                  Color(0xFF15151A), // Deep Slate
+                  Color(0xFF0F0F13), // Deepest Void
+                ],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF8F9FA), // Clean crisp white-gray
+                  Color(0xFFE9ECEF), // Sophisticated light slate
+                  Color(0xFFDEE2E6), // Cool gray depth
+                ],
+              ),
       ),
       child: child,
     );
   }
 }
 
+class GlassContainer extends StatelessWidget {
+  final Widget child;
+  final double blur;
+  final double alpha;
+  final BorderRadius? borderRadius;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final Color? borderColor;
+
+  const GlassContainer({
+    super.key,
+    required this.child,
+    this.blur = 16.0,
+    this.alpha = 0.5,
+    this.borderRadius,
+    this.padding,
+    this.margin,
+    this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = isDark(context);
+    return Container(
+      margin: margin,
+      child: ClipRRect(
+        borderRadius: borderRadius ?? BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: Container(
+            padding: padding,
+            decoration: BoxDecoration(
+              color: dark ? Colors.black.withValues(alpha: alpha * 0.7) : Colors.white.withValues(alpha: alpha),
+              borderRadius: borderRadius ?? BorderRadius.circular(20),
+              border: Border.all(
+                color: borderColor ?? (dark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.6)),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: dark ? Colors.black.withValues(alpha: 0.2) : glassShadow,
+                  blurRadius: 24,
+                  spreadRadius: -4,
+                )
+              ],
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+AppBar appBar(BuildContext context, String title) {
+  final dark = isDark(context);
+  final textColor = dark ? Colors.white : primaryColor;
+  
+  return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(
+          color: textColor,
+          fontWeight: FontWeight.w700,
+          fontSize: 22,
+        ),
+      ),
+      leading: GoRouter.of(context).canPop()
+          ? IconButton(
+              onPressed: () => context.pop(),
+              icon: Icon(Icons.arrow_back_ios_new, color: textColor),
+            )
+          : null,
+      centerTitle: true,
+      flexibleSpace: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(color: dark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.3)),
+        ),
+      ),
+    );
+}
+
+// ==========================================
+// UPDATED LEGACY WIDGETS
+// ==========================================
+
+class RoundedField extends StatelessWidget {
+  final Widget child;
+  const RoundedField({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      alpha: 0.6,
+      borderRadius: BorderRadius.circular(16),
+      child: child,
+    );
+  }
+}
+
 InputDecoration inputDecoration() => InputDecoration(
-  filled: true,
-  fillColor: offWhite,
-  enabledBorder: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10),
-    borderSide: BorderSide.none,
-  ),
-  focusedBorder: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(10),
-    borderSide: BorderSide.none,
-  ),
-  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-);
+      filled: true,
+      fillColor: Colors.transparent,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: primaryColor, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
 
 class DropdownField extends ConsumerWidget {
   final StateProvider<String?> ProviderName;
@@ -49,34 +177,36 @@ class DropdownField extends ConsumerWidget {
   final String? hintText;
   final void Function(WidgetRef ref, String?)? onChangeExtra;
   const DropdownField({
-    Key? key,
+    super.key,
     required this.ProviderName,
     required this.item,
     this.hintText,
     this.onChangeExtra,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectValue = ref.watch(ProviderName);
+    final dark = isDark(context);
     return DropdownButtonFormField<String>(
       initialValue: selectValue,
       decoration: inputDecoration(),
-      dropdownColor: offWhite,
-      icon: Icon(Icons.keyboard_arrow_down_rounded),
-      iconEnabledColor: Colors.black,
-      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-      borderRadius: BorderRadius.circular(8),
+      dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
+      icon: Icon(Icons.keyboard_arrow_down_rounded, color: dark ? Colors.white70 : primaryColor),
+      style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600),
+      borderRadius: BorderRadius.circular(16),
       items: [
         if (hintText != null)
-          DropdownMenuItem<String>(value: null, child: Text(hintText!)),
-
+          DropdownMenuItem<String>(
+            value: null,
+            child: Text(hintText!, style: const TextStyle(color: Colors.black45)),
+          ),
         ...item.map((value) {
           return DropdownMenuItem<String>(value: value, child: Text(value));
         }).toList(),
       ],
       onChanged: (newValue) {
-        ref.read(ProviderName.notifier).state = newValue!;
+        ref.read(ProviderName.notifier).state = newValue;
         if (onChangeExtra != null) {
           onChangeExtra!(ref, newValue);
         }
@@ -85,11 +215,10 @@ class DropdownField extends ConsumerWidget {
   }
 }
 
-InputDecoration fieldDecoration({String? hint, IconData? icon}) =>
-    InputDecoration(
+InputDecoration fieldDecoration({String? hint, IconData? icon}) => InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.black45),
-      prefixIcon: icon != null ? Icon(icon, color: Colors.black54) : null,
+      hintStyle: GoogleFonts.inter(color: Colors.black45),
+      prefixIcon: icon != null ? Icon(icon, color: primaryColor.withValues(alpha: 0.7)) : null,
       border: InputBorder.none,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
@@ -98,8 +227,8 @@ class SubjectAutoComplete extends ConsumerWidget {
   final StateProvider<String?> departmentProvider;
   final Map<String?, List<Subject>> departmentMap;
   final StateProvider<List<Subject>> subjectProvider;
-  final InputDecoration Function({required String hint, required IconData icon})
-  fieldDecoration;
+  final InputDecoration Function({required String hint, required IconData icon}) fieldDecoration;
+
   const SubjectAutoComplete({
     super.key,
     required this.departmentProvider,
@@ -122,26 +251,19 @@ class SubjectAutoComplete extends ConsumerWidget {
         }
         return departmentList.where(
           (subject) =>
-              subject.Code.toLowerCase().contains(
-                subjectName.text.toLowerCase(),
-              ) ||
-              subject.Title.toLowerCase().contains(
-                subjectName.text.toLowerCase(),
-              ),
+              subject.Code.toLowerCase().contains(subjectName.text.toLowerCase()) ||
+              subject.Title.toLowerCase().contains(subjectName.text.toLowerCase()),
         );
       },
-      displayStringForOption:
-          (Subject option) => '${option.Code} ${option.Title}',
-
+      displayStringForOption: (Subject option) => '${option.Code} ${option.Title}',
       fieldViewBuilder: (context, controller, focuseNode, onEditingComplete) {
         return TextField(
           controller: controller,
           focusNode: focuseNode,
+          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
           onTap: () {
-            controller.clear(); // clear directly
-            controller.selection = TextSelection.collapsed(
-              offset: controller.text.length,
-            );
+            controller.clear();
+            controller.selection = TextSelection.collapsed(offset: controller.text.length);
           },
           onEditingComplete: onEditingComplete,
           decoration: fieldDecoration(
@@ -152,7 +274,6 @@ class SubjectAutoComplete extends ConsumerWidget {
       },
       onSelected: (Subject subjects) {
         final current = ref.read(subjectProvider);
-
         if (!current.contains(subjects)) {
           ref.read(subjectProvider.notifier).state = [...current, subjects];
         }
@@ -161,33 +282,33 @@ class SubjectAutoComplete extends ConsumerWidget {
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
-            elevation: 4.0,
-            borderRadius: BorderRadius.circular(10),
-            color: offWhite,
+            elevation: 8.0,
+            borderRadius: BorderRadius.circular(16),
+            color: isDark(context) ? const Color(0xFF2C2C32) : Colors.white,
+            shadowColor: isDark(context) ? Colors.black54 : glassShadow,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: ((options.length * 50.0).clamp(0, 5 * 50.0)),
-                maxWidth: (MediaQuery.of(context).size.width) * 0.965,
+                maxHeight: ((options.length * 55.0).clamp(0, 5 * 55.0)),
+                maxWidth: (MediaQuery.of(context).size.width) * 0.90,
               ),
               child: ListView.builder(
-                padding: EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: options.length,
                 itemBuilder: (context, index) {
                   final option = options.elementAt(index);
                   return ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(
                       option.toString(),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
+                      style: GoogleFonts.inter(
+                        fontSize: 15, 
+                        fontWeight: FontWeight.w600,
+                        color: isDark(context) ? Colors.white : Colors.black87,
                       ),
                     ),
                     onTap: () => onSelected(option),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusColor: Colors.teal.shade100.withValues(alpha: 0.3),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    hoverColor: isDark(context) ? Colors.white12 : Colors.blueGrey.shade50,
                   );
                 },
               ),
@@ -199,71 +320,25 @@ class SubjectAutoComplete extends ConsumerWidget {
   }
 }
 
-const primaryColor = Color.fromRGBO(107, 0, 50, 1);
-const offWhite = Color.fromRGBO(255, 249, 242, 1);
-AppBar appBar(BuildContext context, String title) => AppBar(
-  backgroundColor: primaryColor,
-  elevation: 0,
-  title: Text(
-    "${title}",
-    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-  ),
-  leading:
-      GoRouter.of(context).canPop()
-          ? IconButton(
-            onPressed: () {
-              context.pop();
-            },
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-          )
-          : null,
-  centerTitle: true,
-);
+// ==========================================
+// DATA MAPS & PROVIDERS
+// ==========================================
 
 final gradeToPoint = {
-  'A': 4.0,
-  'A-': 3.7,
-  'B+': 3.3,
-  'B': 3.0,
-  'B-': 2.7,
-  'C+': 2.3,
-  'C': 2.0,
-  'C-': 1.7,
-  'D+': 1.3,
-  'D': 1.0,
-  'F': 0.0,
+  'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+  'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0,
 };
 final semester = {
-  "Semester 1",
-  "Semester 2",
-  "Semester 3",
-  "Semester 4",
-  "Semester 5",
-  "Semester 6",
-  "Semester 7",
-  "Semester 8",
-  "Semester 9",
-  "Semester 10",
-  "Semester 11",
-  "Semester 12",
+  "Semester 1", "Semester 2", "Semester 3", "Semester 4", "Semester 5", "Semester 6",
+  "Semester 7", "Semester 8", "Semester 9", "Semester 10", "Semester 11", "Semester 12",
 };
-final creditTo = [
-  "1",
-  "1.5",
-  "2",
-  "2.5",
-  "3",
-  "3.5",
-  "4",
-  "4.5",
-  "5",
-  "5.5",
-  "6",
-];
+final creditTo = ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5", "5.5", "6"];
+
 final GlobalKey<ArrowTooltipState> gradeKey = GlobalKey();
 final GlobalKey<ArrowTooltipState> creditKey = GlobalKey();
 final dialogGradeProvider = StateProvider<String?>((ref) => null);
 final dialogCreditProvider = StateProvider<String>((ref) => '');
+
 void showTooltip(GlobalKey<ArrowTooltipState> key) {
   final dynamic tooltip = key.currentState;
   tooltip?.ensureTooltipVisible();
@@ -273,9 +348,17 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) {
+      final dark = isDark(context);
       return AlertDialog(
-        backgroundColor: offWhite,
-        title: const Text('Add Credit'),
+        backgroundColor: dark ? const Color(0xFF1E1E24) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text(
+          'Add Custom Subject', 
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold, 
+            color: dark ? Colors.white : primaryColor
+          )
+        ),
         content: Consumer(
           builder: (context, ref, child) {
             final selectGrade = ref.watch(dialogCreditProvider);
@@ -284,77 +367,51 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
               mainAxisSize: MainAxisSize.min,
               children: [
                 RoundedField(
-                  child: GestureDetector(
-                    onTap: () {},
-
-                    child: ArrowTooltip(
-                      key: creditKey,
-                      arrowPosition: 'topCenter',
-                      backgroundColor: Colors.blue,
-                      textColor: Colors.white,
-                      message: "Please select a Credit",
-                      child: DropdownButtonFormField<String>(
-                        initialValue: selectGrade.isNotEmpty ? selectGrade : null,
-                        decoration: const InputDecoration(
-                          hintText: "Credit",
-                          contentPadding: EdgeInsets.all(8),
-                          border: InputBorder.none,
-                        ),
-                        dropdownColor: offWhite,
-                        items:
-                            creditTo
-                                .map(
-                                  (credit) => DropdownMenuItem(
-                                    value: credit,
-                                    child: Text(credit),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (String? value) {
-                          if (value != null) {
-                            ref.read(dialogCreditProvider.notifier).state =
-                                value;
-                          }
-                        },
+                  child: ArrowTooltip(
+                    key: creditKey,
+                    arrowPosition: 'topCenter',
+                    backgroundColor: Colors.blueAccent,
+                    textColor: Colors.white,
+                    message: "Please select a Credit",
+                    child: DropdownButtonFormField<String>(
+                      initialValue: selectGrade.isNotEmpty ? selectGrade : null,
+                      decoration: const InputDecoration(
+                        hintText: "Credit",
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        border: InputBorder.none,
                       ),
+                      dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
+                      items: creditTo.map((c) => DropdownMenuItem(
+                        value: c, 
+                        child: Text(c, style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87))
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) ref.read(dialogCreditProvider.notifier).state = value;
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 RoundedField(
-                  child: GestureDetector(
-                    onTap: () {},
-                    child: ArrowTooltip(
-                      key: gradeKey,
-                      arrowPosition: 'bottomCenter',
-                      message: "Please select a grade",
-                      child: DropdownButtonFormField<String>(
-                        initialValue:
-                            gradeToPoint.keys.contains(selectGrade)
-                                ? selectGrade
-                                : null,
-                        decoration: const InputDecoration(
-                          hintText: "Grade",
-                          contentPadding: EdgeInsets.all(8),
-                          border: InputBorder.none,
-                        ),
-                        dropdownColor: offWhite,
-                        items:
-                            gradeToPoint.keys
-                                .map(
-                                  (grade) => DropdownMenuItem(
-                                    value: grade,
-                                    child: Text(grade),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (String? value) {
-                          if (value != null) {
-                            ref.read(dialogGradeProvider.notifier).state =
-                                value;
-                          }
-                        },
+                  child: ArrowTooltip(
+                    key: gradeKey,
+                    arrowPosition: 'bottomCenter',
+                    message: "Please select a grade",
+                    child: DropdownButtonFormField<String>(
+                      initialValue: gradeToPoint.keys.contains(selectGrade) ? selectGrade : null,
+                      decoration: const InputDecoration(
+                        hintText: "Grade",
+                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        border: InputBorder.none,
                       ),
+                      dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
+                      items: gradeToPoint.keys.map((g) => DropdownMenuItem(
+                        value: g, 
+                        child: Text(g, style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87))
+                      )).toList(),
+                      onChanged: (value) {
+                        if (value != null) ref.read(dialogGradeProvider.notifier).state = value;
+                      },
                     ),
                   ),
                 ),
@@ -365,7 +422,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: TextStyle(color: primaryColor)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -383,22 +440,10 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
               }
               if (!hasError) {
                 final currentSubjects = ref.read(subjectProvider);
-                final newSubject = Subject(
-                  "Manual-${currentSubjects.length + 1}",
-                  "Custom Subject",
-                  credit!,
-                );
-                ref.read(subjectProvider.notifier).state = [
-                  ...currentSubjects,
-                  newSubject,
-                ];
-
+                final newSubject = Subject("Manual-${currentSubjects.length + 1}", "Custom Subject", credit!);
+                ref.read(subjectProvider.notifier).state = [...currentSubjects, newSubject];
                 final currentGrades = ref.read(gradeProvider);
-
-                ref.read(gradeProvider.notifier).state = {
-                  ...currentGrades,
-                  newSubject.Code: grade!,
-                };
+                ref.read(gradeProvider.notifier).state = {...currentGrades, newSubject.Code: grade!};
                 ref.read(dialogGradeProvider.notifier).state = null;
                 ref.read(dialogCreditProvider.notifier).state = '';
                 Navigator.of(context).pop();
@@ -406,9 +451,11 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: primaryColor,
-              foregroundColor: offWhite,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text('Add'),
+            child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
           ),
         ],
       );
