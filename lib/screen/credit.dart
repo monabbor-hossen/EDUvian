@@ -23,6 +23,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
   Widget build(BuildContext context) {
     return AppBackground(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
         appBar: appBar(context, "Credit & Cost"),
         body: SafeArea(
@@ -99,7 +100,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                           departmentProvider: departmentProvider,
                           departmentMap: department,
                           subjectProvider: subjectProvider,
-                          fieldDecoration: fieldDecoration,
+                          fieldDecoration: (context, {hint, icon}) => fieldDecoration(context, hint: hint, icon: icon),
                         ),
                       ).animate().fadeIn(delay: 200.ms).scale(begin: const Offset(0.95, 0.95));
                     },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth_service.dart';
 import '../main.dart';
@@ -17,10 +18,35 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEditingName = false;
   final _nameController = TextEditingController();
+  final _academicController = TextEditingController();
+  String _academicInfo = '7DCSE.2'; // Default academic info
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAcademicInfo();
+  }
+
+  Future<void> _loadAcademicInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _academicInfo = prefs.getString('academic_info') ?? '7DCSE.2';
+      _academicController.text = _academicInfo;
+    });
+  }
+
+  Future<void> _saveAcademicInfo(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('academic_info', value);
+    setState(() {
+      _academicInfo = value;
+    });
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _academicController.dispose();
     super.dispose();
   }
 
@@ -63,23 +89,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             CircleAvatar(
                               radius: 30,
                               backgroundColor: primaryColor.withValues(alpha: 0.1),
-                              child: Text(
+                              backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+                              child: user.photoURL == null ? Text(
                                 user.displayName?.isNotEmpty == true ? user.displayName![0].toUpperCase() : 'U',
                                 style: GoogleFonts.poppins(color: primaryColor, fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
+                              ) : null,
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: _isEditingName
-                                  ? TextField(
-                                      controller: _nameController,
-                                      style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
-                                      decoration: InputDecoration(
-                                        hintText: "Enter display name",
-                                        hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
-                                        isDense: true,
-                                        border: const UnderlineInputBorder(),
-                                      ),
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        TextField(
+                                          controller: _nameController,
+                                          style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                                          decoration: InputDecoration(
+                                            hintText: "Enter display name",
+                                            hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                                            isDense: true,
+                                            border: const UnderlineInputBorder(),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextField(
+                                          controller: _academicController,
+                                          style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                                          decoration: InputDecoration(
+                                            hintText: "e.g. 7DCSE.2",
+                                            hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                                            isDense: true,
+                                            border: const UnderlineInputBorder(),
+                                          ),
+                                        ),
+                                      ],
                                     )
                                   : Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,12 +135,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             fontSize: 18,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _academicInfo,
+                                          style: GoogleFonts.inter(
+                                            color: dark ? Colors.white70 : primaryColor,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
                                         Text(
                                           user.email ?? '',
                                           style: GoogleFonts.inter(
                                             color: dark ? Colors.white60 : Colors.black54,
-                                            fontSize: 14,
+                                            fontSize: 13,
                                           ),
                                         ),
                                       ],
@@ -110,14 +162,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               ),
                               onPressed: () async {
                                 if (_isEditingName) {
-                                  // Save name
+                                  // Save name and academic info
                                   if (_nameController.text.trim().isNotEmpty) {
                                     await user.updateDisplayName(_nameController.text.trim());
-                                    // ignore: unused_result
-                                    ref.refresh(authStateProvider);
                                   }
+                                  await _saveAcademicInfo(_academicController.text.trim());
+                                  
+                                  // ignore: unused_result
+                                  ref.refresh(authStateProvider);
                                 } else {
                                   _nameController.text = user.displayName ?? '';
+                                  _academicController.text = _academicInfo;
                                 }
                                 setState(() {
                                   _isEditingName = !_isEditingName;

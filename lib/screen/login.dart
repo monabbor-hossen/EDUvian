@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import '../core/auth_service.dart';
+import '../model/widgets.dart';
 
 // ─── Local State Providers ────────────────────────────────────────────────────
 final _loginEmailProvider = StateProvider<String>((ref) => '');
@@ -19,6 +19,7 @@ class LoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
+    final dark = isDark(context);
 
     final passwordVisible = ref.watch(_passwordVisibleProvider);
     final isLoading = ref.watch(_isLoadingProvider);
@@ -96,27 +97,29 @@ class LoginScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFEEEEF2),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 440),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 32,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 440),
+                decoration: BoxDecoration(
+                  color: dark ? const Color(0xFF1E1E24) : Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: dark ? Border.all(color: Colors.white12) : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: dark ? Colors.black54 : Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 32,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -146,12 +149,12 @@ class LoginScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
 
                   // ── Subtitle ──────────────────────────────────────────────
-                  const Center(
+                  Center(
                     child: Text(
                       'Sign in to your academic portal',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF888888),
+                        color: dark ? Colors.white60 : const Color(0xFF888888),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -194,12 +197,12 @@ class LoginScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // ── Email Label ───────────────────────────────────────────
-                  const Text(
+                  Text(
                     'INSTITUTIONAL EMAIL',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF444444),
+                      color: dark ? Colors.white70 : const Color(0xFF444444),
                       letterSpacing: 1.0,
                     ),
                   ),
@@ -219,12 +222,12 @@ class LoginScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'PASSWORD',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF444444),
+                          color: dark ? Colors.white70 : const Color(0xFF444444),
                           letterSpacing: 1.0,
                         ),
                       ),
@@ -299,10 +302,10 @@ class LoginScreen extends ConsumerWidget {
                     child: Wrap(
                       alignment: WrapAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Don't have an account? ",
                           style: TextStyle(
-                            color: Color(0xFF555555),
+                            color: dark ? Colors.white70 : const Color(0xFF555555),
                             fontSize: 14,
                           ),
                         ),
@@ -326,7 +329,7 @@ class LoginScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -350,21 +353,22 @@ class _AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F4F8),
+        color: dark ? const Color(0xFF2C2C32) : const Color(0xFFF7F4F8),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8E0EE), width: 1.2),
+        border: Border.all(color: dark ? Colors.white12 : const Color(0xFFE8E0EE), width: 1.2),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 15, color: Color(0xFF333333)),
+        style: TextStyle(fontSize: 15, color: dark ? Colors.white : const Color(0xFF333333)),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Color(0xFFBBBBBB), fontSize: 15),
+          hintStyle: TextStyle(color: dark ? Colors.white38 : const Color(0xFFBBBBBB), fontSize: 15),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -396,6 +400,7 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = isDark(context);
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -403,13 +408,13 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color: _hovered ? const Color(0xFFF5F5F5) : Colors.white,
+          color: _hovered ? (dark ? const Color(0xFF3A3A40) : const Color(0xFFF5F5F5)) : (dark ? const Color(0xFF2C2C32) : Colors.white),
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: const Color(0xFFDDDDDD), width: 1.5),
+          border: Border.all(color: dark ? Colors.white12 : const Color(0xFFDDDDDD), width: 1.5),
           boxShadow: _hovered
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.07),
+                    color: dark ? Colors.black54 : Colors.black.withValues(alpha: 0.07),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   )
@@ -431,12 +436,12 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
                   // Google "G" SVG-like icon using colored text
                   _GoogleLogo(),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Continue with Google',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF444444),
+                      color: dark ? Colors.white : const Color(0xFF444444),
                     ),
                   ),
                 ],
@@ -455,12 +460,15 @@ class _GoogleLogo extends StatelessWidget {
     return SizedBox(
       width: 22,
       height: 22,
-      child: CustomPaint(painter: _GoogleLogoPainter()),
+      child: CustomPaint(painter: _GoogleLogoPainter(isDark: isDark(context))),
     );
   }
 }
 
 class _GoogleLogoPainter extends CustomPainter {
+  final bool isDark;
+
+  _GoogleLogoPainter({required this.isDark});
   @override
   void paint(Canvas canvas, Size size) {
     final double cx = size.width / 2;
@@ -494,8 +502,8 @@ class _GoogleLogoPainter extends CustomPainter {
       );
     }
 
-    // White rectangle to simulate the "G" cutout on the right
-    final cutPaint = Paint()..color = Colors.white;
+    // Rectangle to simulate the "G" cutout on the right
+    final cutPaint = Paint()..color = isDark ? const Color(0xFF2C2C32) : Colors.white;
     canvas.drawRect(
       Rect.fromLTWH(cx, cy - size.height * 0.12, r, size.height * 0.24),
       cutPaint,

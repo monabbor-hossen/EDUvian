@@ -41,8 +41,9 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
 
     return AppBackground(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
-        appBar: appBar(context, "GPA Calculator"),
+        appBar: appBar(context, 'GPA Calculator'),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -84,7 +85,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                             departmentProvider: departmentProvider,
                             departmentMap: department,
                             subjectProvider: subjectProvider,
-                            fieldDecoration: fieldDecoration,
+                            fieldDecoration: (context, {hint, icon}) => fieldDecoration(context, hint: hint, icon: icon),
                           ),
                         ),
                       ).animate().fadeIn(delay: 200.ms).slideX(begin: 0.1),

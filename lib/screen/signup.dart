@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import '../core/auth_service.dart';
+import '../model/widgets.dart';
 
 // ─── Local State Providers ────────────────────────────────────────────────────
 final _signupEmailProvider = StateProvider<String>((ref) => '');
@@ -21,6 +21,7 @@ class SignupScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
+    final dark = isDark(context);
 
     final passVisible = ref.watch(_signupPasswordVisibleProvider);
     final confirmVisible = ref.watch(_signupConfirmVisibleProvider);
@@ -69,28 +70,30 @@ class SignupScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFEEEEF2),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 440),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 32,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 440),
+                decoration: BoxDecoration(
+                  color: dark ? const Color(0xFF1E1E24) : Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: dark ? Border.all(color: Colors.white12) : null,
+                  boxShadow: [
+                    BoxShadow(
+                      color: dark ? Colors.black54 : Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 32,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,12 +121,12 @@ class SignupScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Center(
+                  Center(
                     child: Text(
                       'Create your academic account',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF888888),
+                        color: dark ? Colors.white60 : const Color(0xFF888888),
                       ),
                     ),
                   ),
@@ -222,10 +225,10 @@ class SignupScreen extends ConsumerWidget {
                     child: Wrap(
                       alignment: WrapAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Already have an account? ',
                           style: TextStyle(
-                              color: Color(0xFF555555), fontSize: 14),
+                              color: dark ? Colors.white70 : const Color(0xFF555555), fontSize: 14),
                         ),
                         GestureDetector(
                           onTap: () => context.pop(),
@@ -247,20 +250,26 @@ class SignupScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-Widget _fieldLabel(String text) => Text(
-      text,
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w700,
-        color: Color(0xFF444444),
-        letterSpacing: 1.0,
-      ),
-    );
+Widget _fieldLabel(String text) {
+  return Builder(
+    builder: (context) {
+      return Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: isDark(context) ? Colors.white70 : const Color(0xFF444444),
+          letterSpacing: 1.0,
+        ),
+      );
+    }
+  );
+}
 
 class _AuthTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -281,22 +290,23 @@ class _AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dark = isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF7F4F8),
+        color: dark ? const Color(0xFF2C2C32) : const Color(0xFFF7F4F8),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8E0EE), width: 1.2),
+        border: Border.all(color: dark ? Colors.white12 : const Color(0xFFE8E0EE), width: 1.2),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 15, color: Color(0xFF333333)),
+        style: TextStyle(fontSize: 15, color: dark ? Colors.white : const Color(0xFF333333)),
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle:
-              const TextStyle(color: Color(0xFFBBBBBB), fontSize: 15),
+              TextStyle(color: dark ? Colors.white38 : const Color(0xFFBBBBBB), fontSize: 15),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 16),

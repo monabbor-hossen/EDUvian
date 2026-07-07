@@ -48,8 +48,9 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
   Widget build(BuildContext context) {
     return AppBackground(
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         backgroundColor: Colors.transparent,
-        appBar: appBar(context, "CGPA Calculator"),
+        appBar: appBar(context, 'CGPA Calculator'),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -114,8 +115,8 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                           message: "Enter valid Credit",
                           child: TextField(
                             controller: creditController,
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-                            decoration: fieldDecoration(hint: 'Credit', icon: Icons.school_outlined),
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
+                            decoration: fieldDecoration(context, hint: 'Credit', icon: Icons.school_outlined),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onChanged: (value) => ref.read(totalCreditProvider.notifier).state = value,
                           ),
@@ -131,8 +132,8 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                           message: "Enter valid GPA",
                           child: TextField(
                             controller: gpaController,
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w500),
-                            decoration: fieldDecoration(hint: 'GPA (4.0)', icon: Icons.star_border_rounded),
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
+                            decoration: fieldDecoration(context, hint: 'GPA (4.0)', icon: Icons.star_border_rounded),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onChanged: (value) => ref.read(totalGpaProvider.notifier).state = value,
                           ),

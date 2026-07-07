@@ -199,7 +199,7 @@ class DropdownField extends ConsumerWidget {
         if (hintText != null)
           DropdownMenuItem<String>(
             value: null,
-            child: Text(hintText!, style: const TextStyle(color: Colors.black45)),
+            child: Text(hintText!, style: TextStyle(color: dark ? Colors.white54 : Colors.black45)),
           ),
         ...item.map((value) {
           return DropdownMenuItem<String>(value: value, child: Text(value));
@@ -215,9 +215,9 @@ class DropdownField extends ConsumerWidget {
   }
 }
 
-InputDecoration fieldDecoration({String? hint, IconData? icon}) => InputDecoration(
+InputDecoration fieldDecoration(BuildContext context, {String? hint, IconData? icon}) => InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.inter(color: Colors.black45),
+      hintStyle: GoogleFonts.inter(color: isDark(context) ? Colors.white54 : Colors.black45),
       prefixIcon: icon != null ? Icon(icon, color: primaryColor.withValues(alpha: 0.7)) : null,
       border: InputBorder.none,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -227,7 +227,7 @@ class SubjectAutoComplete extends ConsumerWidget {
   final StateProvider<String?> departmentProvider;
   final Map<String?, List<Subject>> departmentMap;
   final StateProvider<List<Subject>> subjectProvider;
-  final InputDecoration Function({required String hint, required IconData icon}) fieldDecoration;
+  final InputDecoration Function(BuildContext context, {String? hint, IconData? icon}) fieldDecoration;
 
   const SubjectAutoComplete({
     super.key,
@@ -257,16 +257,18 @@ class SubjectAutoComplete extends ConsumerWidget {
       },
       displayStringForOption: (Subject option) => '${option.Code} ${option.Title}',
       fieldViewBuilder: (context, controller, focuseNode, onEditingComplete) {
+        final dark = isDark(context);
         return TextField(
           controller: controller,
           focusNode: focuseNode,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: dark ? Colors.white : Colors.black87),
           onTap: () {
             controller.clear();
             controller.selection = TextSelection.collapsed(offset: controller.text.length);
           },
           onEditingComplete: onEditingComplete,
           decoration: fieldDecoration(
+            context,
             hint: 'Search Subject',
             icon: Icons.search,
           ),
