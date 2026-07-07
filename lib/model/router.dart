@@ -2,7 +2,9 @@ import 'package:eduvian/core/auth_service.dart';
 import 'package:eduvian/screen/cgpa.dart';
 import 'package:eduvian/screen/gpa.dart';
 import 'package:eduvian/screen/home.dart';
+import 'package:eduvian/screen/dashboard.dart';
 import 'package:eduvian/screen/login.dart';
+import 'package:eduvian/screen/main_layout.dart';
 import 'package:eduvian/screen/settings.dart';
 import 'package:eduvian/screen/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,8 +34,40 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+      
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return MainLayoutScreen(navigationShell: navigationShell);
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/',
+                builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/calculator',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/settings',
+                builder: (context, state) => const SettingsScreen(),
+              ),
+            ],
+          ),
+        ],
+      ),
+      
+      // Standalone routes (accessed from Calculator menu)
       GoRoute(
         path: '/credit',
         builder: (context, state) => const CreditCalculation(),

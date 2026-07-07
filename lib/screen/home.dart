@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -33,19 +34,6 @@ class HomeScreen extends ConsumerWidget {
             ),
           ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.2),
           centerTitle: true,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: IconButton(
-                onPressed: () => context.push('/settings'),
-                icon: Icon(
-                  Icons.settings_rounded,
-                  color: isDark(context) ? Colors.white : primaryColor,
-                  size: 28,
-                ),
-              ).animate().scale(delay: 200.ms),
-            ),
-          ],
         ),
         body: SafeArea(
           child: Padding(
@@ -72,36 +60,36 @@ class HomeScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1),
-                const SizedBox(height: 40),
+                const SizedBox(height: 30),
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 20,
-                    childAspectRatio: 0.85,
+                  child: ListView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 10, bottom: 100), // padding so cards don't hide behind floating notch bar
                     children: [
-                      _buildLargeCard(
-                        context,
+                      _CalculatorCard(
                         icon: Icons.attach_money_rounded,
-                        label: 'Credit &\nCost',
+                        label: 'Credit & Cost',
+                        description: 'Manage semester credits and calculate tuition fees.',
                         color: const Color(0xFFE84545),
-                        onTap: '/credit',
-                        delay: 300,
+                        route: '/credit',
+                        delay: 200,
                       ),
-                      _buildLargeCard(
-                        context,
+                      const SizedBox(height: 24),
+                      _CalculatorCard(
                         icon: Icons.school_rounded,
-                        label: 'GPA\nCalculator',
-                        color: const Color(0xFF2B2E4A),
-                        onTap: '/gpa',
-                        delay: 400,
+                        label: 'GPA Calculator',
+                        description: 'Estimate your semester Grade Point Average.',
+                        color: const Color(0xFF4A90E2),
+                        route: '/gpa',
+                        delay: 350,
                       ),
-                      _buildLargeCard(
-                        context,
+                      const SizedBox(height: 24),
+                      _CalculatorCard(
                         icon: Icons.workspace_premium_rounded,
-                        label: 'CGPA\nCalculator',
+                        label: 'CGPA Calculator',
+                        description: 'Track cumulative academic progress over semesters.',
                         color: const Color(0xFF903749),
-                        onTap: '/cgpa',
+                        route: '/cgpa',
                         delay: 500,
                       ),
                     ],
@@ -114,48 +102,219 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildLargeCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required String onTap,
-    required int delay,
-  }) {
+class _CalculatorCard extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+  final Color color;
+  final String route;
+  final int delay;
+
+  const _CalculatorCard({
+    required this.icon,
+    required this.label,
+    required this.description,
+    required this.color,
+    required this.route,
+    required this.delay,
+  });
+
+  @override
+  State<_CalculatorCard> createState() => _CalculatorCardState();
+}
+
+class _CalculatorCardState extends State<_CalculatorCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = isDark(context);
+    
+    // Custom gradient for each card depending on its route/type
+    final Gradient cardGradient;
+    final String footerText;
+    
+    if (widget.route == '/credit') {
+      cardGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: dark 
+          ? [const Color(0xFF3E081F), const Color(0xFF7A1431)]
+          : [const Color(0xFF5A0D2E), const Color(0xFFE84545).withValues(alpha: 0.85)],
+      );
+      footerText = 'Tuition Fees & Credits';
+    } else if (widget.route == '/gpa') {
+      cardGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: dark
+          ? [const Color(0xFF13083B), const Color(0xFF323B9B)]
+          : [const Color(0xFF221163), const Color(0xFF4A90E2).withValues(alpha: 0.85)],
+      );
+      footerText = 'Semester Average';
+    } else {
+      cardGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: dark
+          ? [const Color(0xFF3A0826), const Color(0xFF7D1B44)]
+          : [const Color(0xFF5C0F39), const Color(0xFF903749).withValues(alpha: 0.85)],
+      );
+      footerText = 'Cumulative Average';
+    }
+
     return GestureDetector(
-      onTap: () => context.push(onTap),
-      child: GlassContainer(
-        blur: 20,
-        alpha: 0.6,
-        borderRadius: BorderRadius.circular(24),
-        padding: const EdgeInsets.all(20),
-        borderColor: Colors.white.withValues(alpha: 0.8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+      onTapDown: (_) => setState(() => _isHovered = true),
+      onTapUp: (_) => setState(() => _isHovered = false),
+      onTapCancel: () => setState(() => _isHovered = false),
+      onTap: () {
+        context.push(widget.route);
+        setState(() => _isHovered = false);
+      },
+      child: AnimatedContainer(
+        duration: 200.ms,
+        transform: Matrix4.identity()..scale(_isHovered ? 0.98 : 1.0),
+        margin: const EdgeInsets.only(top: 10), // space for overflow icon
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
+            // The Glass Card Base
             Container(
-              padding: const EdgeInsets.all(12),
+              height: 125,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(28),
+                gradient: cardGradient,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withValues(alpha: _isHovered ? 0.35 : 0.15),
+                    blurRadius: _isHovered ? 24 : 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Icon(icon, size: 36, color: color),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.15), // subtle tint
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Left upper section: Title
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.label,
+                              style: GoogleFonts.poppins(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.55,
+                              child: Text(
+                                widget.description,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white.withValues(alpha: 0.75),
+                                  fontSize: 12,
+                                  height: 1.25,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // Left lower section: Footer label
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.stars_rounded,
+                              size: 14,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              footerText,
+                              style: GoogleFonts.inter(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-            const Spacer(),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                color: isDark(context) ? Colors.white : Colors.black87,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-              ),
+            
+            // Overlapping 3D floating icon
+            Positioned(
+              top: -18,
+              right: 15,
+              child: AnimatedContainer(
+                duration: 200.ms,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.25),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: widget.color.withValues(alpha: 0.4),
+                      blurRadius: _isHovered ? 24 : 16,
+                      spreadRadius: _isHovered ? 2 : 0,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  widget.icon, 
+                  size: 32, 
+                  color: Colors.white,
+                ),
+              ).animate(target: _isHovered ? 1 : 0).scale(end: const Offset(1.1, 1.1)),
+            ),
+            
+            // Faint bottom-right glowing arrow indicator
+            Positioned(
+              bottom: 15,
+              right: 15,
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.6),
+              ).animate(target: _isHovered ? 1 : 0).move(end: const Offset(6, 0)),
             ),
           ],
         ),
-      ).animate().fadeIn(delay: delay.ms).slideY(begin: 0.2).shimmer(delay: (delay + 500).ms, duration: 1000.ms, color: Colors.white.withValues(alpha: 0.5)),
+      ),
     );
   }
 }
