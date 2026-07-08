@@ -49,8 +49,8 @@ class ClassEntry {
   final String teacher;
   /// null = every week, 'A' = odd weeks only, 'B' = even weeks only
   final String? weekType;
-  /// specific events for specific dates (key: "yyyy-MM-dd", value: "Canceled", "CT", etc.)
-  final Map<String, String>? dateEvents;
+  /// specific events for specific dates (key: "yyyy-MM-dd", value: Map or String)
+  final Map<String, dynamic>? dateEvents;
 
   const ClassEntry({
     required this.id,
@@ -91,9 +91,38 @@ class ClassEntry {
     teacher: map['teacher'] as String? ?? '',
     weekType: map['weekType'] as String?,
     dateEvents: map['dateEvents'] != null 
-        ? Map<String, String>.from(map['dateEvents'] as Map) 
+        ? Map<String, dynamic>.from(map['dateEvents'] as Map) 
         : null,
   );
+
+  String? getEventText(String dateStr) {
+    if (dateEvents == null || !dateEvents!.containsKey(dateStr)) return null;
+    final val = dateEvents![dateStr];
+    if (val is String) return val;
+    if (val is Map) return val['text'] as String?;
+    return null;
+  }
+
+  String? getEventStartTime(String dateStr) {
+    if (dateEvents == null || !dateEvents!.containsKey(dateStr)) return null;
+    final val = dateEvents![dateStr];
+    if (val is Map) return val['startTime'] as String?;
+    return null;
+  }
+
+  String? getEventEndTime(String dateStr) {
+    if (dateEvents == null || !dateEvents!.containsKey(dateStr)) return null;
+    final val = dateEvents![dateStr];
+    if (val is Map) return val['endTime'] as String?;
+    return null;
+  }
+
+  String? getEventRoom(String dateStr) {
+    if (dateEvents == null || !dateEvents!.containsKey(dateStr)) return null;
+    final val = dateEvents![dateStr];
+    if (val is Map) return val['room'] as String?;
+    return null;
+  }
 
   ClassEntry copyWith({
     String? id,
@@ -112,7 +141,7 @@ class ClassEntry {
     room: room ?? this.room,
     teacher: teacher ?? this.teacher,
     weekType: weekType == _sentinel ? this.weekType : weekType as String?,
-    dateEvents: dateEvents == _sentinel ? this.dateEvents : dateEvents as Map<String, String>?,
+    dateEvents: dateEvents == _sentinel ? this.dateEvents : dateEvents as Map<String, dynamic>?,
   );
 
   static const Object _sentinel = Object();

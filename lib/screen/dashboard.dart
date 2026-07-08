@@ -262,6 +262,29 @@ class _TodayClassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ongoing = entry.isOngoing;
+    
+    final dateStr = '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+    final eventText = entry.getEventText(dateStr);
+    final startTime = entry.getEventStartTime(dateStr) ?? entry.startTime;
+    final endTime = entry.getEventEndTime(dateStr) ?? entry.endTime;
+    final room = entry.getEventRoom(dateStr) ?? entry.room;
+
+    final hasEvent = eventText != null || entry.getEventStartTime(dateStr) != null || entry.getEventEndTime(dateStr) != null || entry.getEventRoom(dateStr) != null;
+    
+    List<Color> eventColors = [];
+    if (hasEvent) {
+       final lower = (eventText ?? '').toLowerCase();
+       final roomLower = room.toLowerCase();
+       
+       if (lower.contains('cancel')) eventColors.add(Colors.red);
+       if (lower.contains('assignment')) eventColors.add(Colors.blue);
+       if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) eventColors.add(Colors.orange);
+       if (roomLower.contains('online') || lower.contains('online')) eventColors.add(Colors.teal);
+       
+       if (eventColors.isEmpty) {
+           eventColors.add(primaryColor);
+       }
+    }
 
     return IntrinsicHeight(
       child: Row(
@@ -273,7 +296,7 @@ class _TodayClassCard extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  format12Hour(entry.startTime),
+                  format12Hour(startTime),
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -295,9 +318,9 @@ class _TodayClassCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (!isLast)
+                if (!isLast && entry.getEventStartTime(dateStr) == null)
                   Text(
-                    format12Hour(entry.endTime),
+                    format12Hour(endTime),
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       color: dark ? Colors.white38 : Colors.black38,
@@ -322,18 +345,28 @@ class _TodayClassCard extends StatelessWidget {
                           const Color(0xFF3B1F8F),
                         ],
                       )
-                    : null,
-                color: ongoing
+                    : (hasEvent && eventColors.length > 1
+                        ? LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: eventColors.map((c) => c.withValues(alpha: dark ? 0.2 : 0.15)).toList(),
+                          )
+                        : null),
+                color: ongoing || (hasEvent && eventColors.length > 1)
                     ? null
-                    : (dark
-                        ? Colors.white.withValues(alpha: 0.07)
-                        : Colors.white.withValues(alpha: 0.8)),
+                    : (hasEvent
+                        ? eventColors.first.withValues(alpha: dark ? 0.15 : 0.08)
+                        : (dark
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : Colors.white.withValues(alpha: 0.8))),
                 border: Border.all(
                   color: ongoing
                       ? Colors.white.withValues(alpha: 0.2)
-                      : (dark
-                          ? Colors.white12
-                          : Colors.black.withValues(alpha: 0.07)),
+                      : (hasEvent
+                          ? eventColors.first.withValues(alpha: 0.4)
+                          : (dark
+                              ? Colors.white12
+                              : Colors.black.withValues(alpha: 0.07))),
                   width: 1.2,
                 ),
                 boxShadow: ongoing
@@ -365,6 +398,9 @@ class _TodayClassCard extends StatelessWidget {
                             style: GoogleFonts.poppins(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
+                              decoration: (eventText?.toLowerCase().contains('cancel') == true) 
+                                  ? TextDecoration.lineThrough 
+                                  : null,
                               color: ongoing
                                   ? Colors.white
                                   : (dark ? Colors.white : Colors.black87),
@@ -410,10 +446,10 @@ class _TodayClassCard extends StatelessWidget {
                       spacing: 12,
                       runSpacing: 4,
                       children: [
-                        if (entry.room.isNotEmpty)
+                        if (room.isNotEmpty)
                           _InfoPill(
                             icon: Icons.location_on_rounded,
-                            label: entry.room,
+                            label: room,
                             light: ongoing,
                             dark: dark,
                           ),
@@ -424,15 +460,64 @@ class _TodayClassCard extends StatelessWidget {
                             light: ongoing,
                             dark: dark,
                           ),
-                        _InfoPill(
-                          icon: Icons.schedule_rounded,
-                          label:
-                              '${format12Hour(entry.startTime)} – ${format12Hour(entry.endTime)}',
-                          light: ongoing,
-                          dark: dark,
-                        ),
+                        if (entry.getEventStartTime(dateStr) == null)
+                          _InfoPill(
+                            icon: Icons.schedule_rounded,
+                            label:
+                                '${format12Hour(startTime)} – ${format12Hour(endTime)}',
+                            light: ongoing,
+                            dark: dark,
+                          ),
                       ],
                     ),
+                    if (eventText != null && eventText.trim().isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: eventText
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .map((et) {
+                          final lower = et.toLowerCase();
+                          Color baseColor = primaryColor;
+                          if (lower.contains('cancel')) {
+                            baseColor = Colors.red;
+                          } else if (lower.contains('assignment')) {
+                            baseColor = Colors.blue;
+                          } else if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) {
+                            baseColor = Colors.orange;
+                          } else if (lower.contains('online')) {
+                            baseColor = Colors.teal;
+                          }
+                          
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: ongoing
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : baseColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: ongoing
+                                    ? Colors.white38
+                                    : baseColor.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: Text(
+                              et,
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: ongoing ? Colors.white : baseColor,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ],
                 ),
               ),

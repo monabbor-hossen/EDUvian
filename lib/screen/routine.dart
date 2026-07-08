@@ -540,6 +540,29 @@ class _ClassCard extends ConsumerWidget {
     final service = ref.read(routineServiceProvider);
     final isToday = day == todayName;
     final ongoing = isToday && entry.isOngoing;
+    
+    final dateStr = _formatDate(selectedDate);
+    final eventText = entry.getEventText(dateStr);
+    final startTime = entry.getEventStartTime(dateStr) ?? entry.startTime;
+    final endTime = entry.getEventEndTime(dateStr) ?? entry.endTime;
+    final room = entry.getEventRoom(dateStr) ?? entry.room;
+
+    final hasEvent = eventText != null || entry.getEventStartTime(dateStr) != null || entry.getEventEndTime(dateStr) != null || entry.getEventRoom(dateStr) != null;
+    
+    List<Color> eventColors = [];
+    if (hasEvent) {
+       final lower = (eventText ?? '').toLowerCase();
+       final roomLower = room.toLowerCase();
+       
+       if (lower.contains('cancel')) eventColors.add(Colors.red);
+       if (lower.contains('assignment')) eventColors.add(Colors.blue);
+       if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) eventColors.add(Colors.orange);
+       if (roomLower.contains('online') || lower.contains('online')) eventColors.add(Colors.teal);
+       
+       if (eventColors.isEmpty) {
+           eventColors.add(primaryColor);
+       }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -554,16 +577,26 @@ class _ClassCard extends ConsumerWidget {
                   const Color(0xFF3B1F8F).withValues(alpha: 0.75),
                 ],
               )
-            : null,
-        color: ongoing
+            : (hasEvent && eventColors.length > 1
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: eventColors.map((c) => c.withValues(alpha: dark ? 0.2 : 0.15)).toList(),
+                  )
+                : null),
+        color: ongoing || (hasEvent && eventColors.length > 1)
             ? null
-            : (dark
-                ? Colors.white.withValues(alpha: 0.06)
-                : Colors.white.withValues(alpha: 0.7)),
+            : (hasEvent
+                ? eventColors.first.withValues(alpha: dark ? 0.15 : 0.08)
+                : (dark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.white.withValues(alpha: 0.7))),
         border: Border.all(
           color: ongoing
               ? Colors.white.withValues(alpha: 0.2)
-              : (dark ? Colors.white12 : Colors.black.withValues(alpha: 0.08)),
+              : (hasEvent
+                  ? eventColors.first.withValues(alpha: 0.4)
+                  : (dark ? Colors.white12 : Colors.black.withValues(alpha: 0.08))),
           width: 1.2,
         ),
         boxShadow: ongoing
@@ -594,23 +627,25 @@ class _ClassCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    format12Hour(entry.startTime),
+                    format12Hour(startTime),
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: ongoing ? Colors.white : (dark ? Colors.white70 : primaryColor),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    format12Hour(entry.endTime),
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color: ongoing
-                          ? Colors.white60
-                          : (dark ? Colors.white38 : Colors.black38),
+                  if (entry.getEventStartTime(dateStr) == null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      format12Hour(endTime),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        color: ongoing
+                            ? Colors.white60
+                            : (dark ? Colors.white38 : Colors.black38),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -639,7 +674,7 @@ class _ClassCard extends ConsumerWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            decoration: (entry.dateEvents?[_formatDate(selectedDate)]?.toLowerCase().contains('cancel') == true) 
+                            decoration: (eventText?.toLowerCase().contains('cancel') == true) 
                                 ? TextDecoration.lineThrough 
                                 : null,
                             color: ongoing
@@ -696,10 +731,10 @@ class _ClassCard extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  if (entry.room.isNotEmpty)
+                  if (room.isNotEmpty)
                     _InfoRow(
                       icon: Icons.location_on_rounded,
-                      label: entry.room,
+                      label: room,
                       light: ongoing,
                       dark: dark,
                     ),
@@ -712,17 +747,17 @@ class _ClassCard extends ConsumerWidget {
                       dark: dark,
                     ),
                   ],
-                  if (entry.dateEvents?[_formatDate(selectedDate)] != null) ...[
+                  if (eventText != null && eventText.trim().isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
-                      children: entry.dateEvents![_formatDate(selectedDate)]!
+                      children: eventText
                           .split(',')
                           .map((e) => e.trim())
                           .where((e) => e.isNotEmpty)
-                          .map((eventText) {
-                        final lower = eventText.toLowerCase();
+                          .map((et) {
+                        final lower = et.toLowerCase();
                         Color baseColor = primaryColor;
                         if (lower.contains('cancel')) {
                           baseColor = Colors.red;
@@ -730,6 +765,8 @@ class _ClassCard extends ConsumerWidget {
                           baseColor = Colors.blue;
                         } else if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) {
                           baseColor = Colors.orange;
+                        } else if (lower.contains('online')) {
+                          baseColor = Colors.teal;
                         }
                         
                         return Container(
@@ -742,7 +779,7 @@ class _ClassCard extends ConsumerWidget {
                             ),
                           ),
                           child: Text(
-                            eventText,
+                            et,
                             style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
@@ -987,16 +1024,28 @@ void _showClassActionSheet(
   final service = ref.read(routineServiceProvider);
   final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
 
-  final initialStatus = entry.dateEvents?[dateStr];
-  final ctrl = TextEditingController(text: initialStatus ?? '');
+  final initialText = entry.getEventText(dateStr);
+  final ctrl = TextEditingController(text: initialText ?? '');
+  
+  String? overrideStartTime = entry.getEventStartTime(dateStr);
+  final roomCtrl = TextEditingController(text: entry.getEventRoom(dateStr) ?? '');
+  final roomFocus = FocusNode();
 
   void _updateStatus(String? status) async {
     Navigator.pop(context);
-    final events = entry.dateEvents != null ? Map<String, String>.from(entry.dateEvents!) : <String, String>{};
-    if (status == null || status.trim().isEmpty) {
+    final events = entry.dateEvents != null ? Map<String, dynamic>.from(entry.dateEvents!) : <String, dynamic>{};
+    
+    final hasTimeOrRoom = overrideStartTime != null || roomCtrl.text.trim().isNotEmpty;
+    final hasText = status != null && status.trim().isNotEmpty;
+
+    if (!hasText && !hasTimeOrRoom) {
       events.remove(dateStr);
     } else {
-      events[dateStr] = status.trim();
+      events[dateStr] = {
+        if (hasText) 'text': status.trim(),
+        if (overrideStartTime != null) 'startTime': overrideStartTime,
+        if (roomCtrl.text.trim().isNotEmpty) 'room': roomCtrl.text.trim(),
+      };
     }
     
     try {
@@ -1008,158 +1057,290 @@ void _showClassActionSheet(
     }
   }
 
+  bool showOverrides = overrideStartTime != null || roomCtrl.text.trim().isNotEmpty;
+
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) {
-      return Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: dark ? const Color(0xFF1E1E24) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Class Options',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: dark ? Colors.white : Colors.black87,
+      return StatefulBuilder(
+        builder: (context, setState) {
+          Future<void> pickTime() async {
+            final currentStr = overrideStartTime ?? entry.startTime;
+            TimeOfDay initialTime = TimeOfDay.now();
+            if (currentStr.isNotEmpty) {
+              final parts = currentStr.split(':');
+              if (parts.length == 2) {
+                initialTime = TimeOfDay(hour: int.tryParse(parts[0]) ?? 0, minute: int.tryParse(parts[1]) ?? 0);
+              }
+            }
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: initialTime,
+              builder: (context, child) => Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: dark
+                      ? const ColorScheme.dark(primary: primaryColor, surface: Color(0xFF1E1E24))
+                      : const ColorScheme.light(primary: primaryColor),
                 ),
-                textAlign: TextAlign.center,
+                child: child!,
               ),
-              const SizedBox(height: 16),
-              
-              // Custom text input
-              TextField(
-                controller: ctrl,
-                minLines: 3,
-                maxLines: 5,
-                style: GoogleFonts.inter(
-                  color: dark ? Colors.white : Colors.black87,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Any class update? e.g. "Canceled"',
-                  hintStyle: GoogleFonts.inter(
-                    color: dark ? Colors.white38 : Colors.black38,
-                  ),
-                  filled: true,
-                  fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: dark ? Colors.white12 : Colors.black12,
+            );
+            if (picked != null) {
+              setState(() {
+                overrideStartTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+              });
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: dark ? const Color(0xFF1E1E24) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Class Options',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: dark ? Colors.white : Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: dark ? Colors.white12 : Colors.black12,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: primaryColor, width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Quick-fill chips
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  'Canceled',
-                  'Class Test',
-                  'Mid',
-                  'Assignment',
-                ].map((text) => ActionChip(
-                  label: Text(text, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
-                  backgroundColor: dark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
-                  side: BorderSide(color: dark ? Colors.white12 : Colors.black12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  onPressed: () {
-                    final current = ctrl.text.trim();
-                    if (current.isEmpty) {
-                      ctrl.text = text;
-                    } else {
-                      final parts = current.split(',').map((e) => e.trim()).toList();
-                      if (parts.contains(text)) {
-                        parts.remove(text);
-                        ctrl.text = parts.join(', ');
-                      } else {
-                        ctrl.text = current + (current.endsWith(',') ? ' ' : ', ') + text;
-                      }
-                    }
-                  },
-                )).toList(),
-              ),
-              
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  if (initialStatus != null) ...[
-                    Expanded(
-                      flex: 1,
-                      child: OutlinedButton(
-                        onPressed: () => _updateStatus(null),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    const SizedBox(height: 16),
+                    
+                    // Custom text input
+                    TextField(
+                      controller: ctrl,
+                      minLines: 2,
+                      maxLines: 4,
+                      style: GoogleFonts.inter(
+                        color: dark ? Colors.white : Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Any class update? e.g. "Canceled"',
+                        hintStyle: GoogleFonts.inter(
+                          color: dark ? Colors.white38 : Colors.black38,
                         ),
-                        child: Text('Clear', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                        filled: true,
+                        fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: dark ? Colors.white12 : Colors.black12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: dark ? Colors.white12 : Colors.black12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: primaryColor, width: 2),
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(height: 8),
+                    
+                    // Quick-fill chips
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        'Canceled',
+                        'Class Test',
+                        'Mid',
+                        'Assignment',
+                        'Online',
+                        'Room Change',
+                      ].map((text) => ActionChip(
+                        label: Text(text, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                        backgroundColor: dark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
+                        side: BorderSide(color: dark ? Colors.white12 : Colors.black12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        onPressed: () {
+                          if (text == 'Online') {
+                            setState(() {
+                              showOverrides = true;
+                              roomCtrl.text = 'Online';
+                            });
+                          } else if (text == 'Room Change') {
+                            setState(() {
+                              showOverrides = true;
+                              roomFocus.requestFocus();
+                            });
+                          } else {
+                            final current = ctrl.text.trim();
+                            if (current.isEmpty) {
+                              ctrl.text = text;
+                            } else {
+                              final parts = current.split(',').map((e) => e.trim()).toList();
+                              if (parts.contains(text)) {
+                                parts.remove(text);
+                                ctrl.text = parts.join(', ');
+                              } else {
+                                ctrl.text = current + (current.endsWith(',') ? ' ' : ', ') + text;
+                              }
+                            }
+                          }
+                        },
+                      )).toList(),
+                    ),
+                    
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(height: 1, color: Colors.black12),
+                    ),
+                    
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          showOverrides = !showOverrides;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.tune_rounded, size: 18, color: primaryColor),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('Time & Room Override (Optional)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: dark ? Colors.white70 : Colors.black87)),
+                            ),
+                            Icon(showOverrides ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 20, color: dark ? Colors.white54 : Colors.black54),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    if (showOverrides) ...[
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: pickTime,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: dark ? Colors.white12 : Colors.black12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Custom Time', style: GoogleFonts.inter(fontSize: 10, color: dark ? Colors.white54 : Colors.black54)),
+                                          const SizedBox(height: 2),
+                                          Text(overrideStartTime != null ? format12Hour(overrideStartTime!) : 'Keep Original', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: overrideStartTime != null ? primaryColor : (dark ? Colors.white : Colors.black87))),
+                                        ],
+                                      ),
+                                    ),
+                                    if (overrideStartTime != null)
+                                      IconButton(
+                                        icon: const Icon(Icons.close_rounded, size: 18),
+                                        onPressed: () {
+                                          setState(() {
+                                            overrideStartTime = null;
+                                          });
+                                        },
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        color: Colors.redAccent,
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: roomCtrl,
+                        focusNode: roomFocus,
+                        style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: 'New Room (e.g. "Online")',
+                          hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                          filled: true,
+                          fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: dark ? Colors.white12 : Colors.black12)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: dark ? Colors.white12 : Colors.black12)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primaryColor, width: 2)),
+                          suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: roomCtrl,
+                            builder: (context, value, child) {
+                              if (value.text.isEmpty) return const SizedBox.shrink();
+                              return IconButton(
+                                icon: const Icon(Icons.close_rounded, size: 18),
+                                onPressed: () {
+                                  roomCtrl.clear();
+                                },
+                                color: Colors.redAccent,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                    
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        if (initialText != null || overrideStartTime != null || entry.getEventRoom(dateStr) != null) ...[
+                          Expanded(
+                            flex: 1,
+                            child: OutlinedButton(
+                              onPressed: () => _updateStatus(null),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: Text('Clear', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: () => _updateStatus(ctrl.text),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            child: Text('Save Status', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      onPressed: () => _updateStatus(ctrl.text),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      child: Text('Save Status', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-              
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Divider(height: 1, color: Colors.black12),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showClassDialog(context, ref, day, existing: entry);
-                },
-                icon: const Icon(Icons.edit_rounded, size: 18),
-                label: Text('Edit Class Details', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: dark ? Colors.white70 : Colors.black87,
-                  side: BorderSide(color: dark ? Colors.white24 : Colors.black12),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }
       );
     },
   );
