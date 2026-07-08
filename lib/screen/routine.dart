@@ -134,7 +134,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _buildAppBar(dark, rawAcademicInfo),
-        floatingActionButton: _buildFab(dark),
+        floatingActionButton: _buildFab(dark, batchId),
         body: routineAsync.when(
           loading: () => const Center(
             child: CircularProgressIndicator(color: primaryColor),
@@ -191,13 +191,35 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
             ),
           ),
           if (batchId != null)
-            Text(
-              batchId,
-              style: GoogleFonts.inter(
-                color: dark ? Colors.white54 : Colors.black45,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  batchId,
+                  style: GoogleFonts.inter(
+                    color: dark ? Colors.white54 : Colors.black45,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: primaryColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(
+                    'Week $currentWeekType',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: primaryColor,
+                    ),
+                  ),
+                ),
+              ],
             ),
         ],
       ),
@@ -205,10 +227,9 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
     );
   }
 
-  Widget _buildFab(bool dark) {
+  Widget _buildFab(bool dark, String? batchId) {
     return FloatingActionButton.extended(
-      onPressed: () => _showClassDialog(context, ref,
-          kDays[_tabController.index]),
+      onPressed: () => _showClassDialog(context, ref, kDays[_tabController.index]),
       backgroundColor: primaryColor,
       foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
@@ -318,16 +339,19 @@ class _DayTabBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (classes.isEmpty) {
+    // Filter: show every-week classes + classes matching the current week type
+    final filtered = classes.where((c) => c.isThisWeek).toList();
+
+    if (filtered.isEmpty) {
       return _EmptyDayView(day: day, dark: dark);
     }
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       physics: const BouncingScrollPhysics(),
-      itemCount: classes.length,
+      itemCount: filtered.length,
       itemBuilder: (context, index) {
-        final entry = classes[index];
+        final entry = filtered[index];
         return _ClassCard(
           entry: entry,
           day: day,
@@ -466,8 +490,34 @@ class _ClassCard extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      if (entry.weekType != null)
+                        Container(
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: ongoing
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : primaryColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: ongoing
+                                  ? Colors.white38
+                                  : primaryColor.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Text(
+                            'Wk ${entry.weekType}',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: ongoing ? Colors.white : primaryColor,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                       if (ongoing)
                         Container(
+                          margin: const EdgeInsets.only(left: 4),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
@@ -756,6 +806,8 @@ class _ClassDialogState extends State<_ClassDialog> {
   String _startTime = '08:00';
   String _endTime = '09:30';
   bool _saving = false;
+  /// null = every week, 'A' = odd weeks, 'B' = even weeks
+  String? _weekType;
 
   @override
   void initState() {
@@ -766,6 +818,7 @@ class _ClassDialogState extends State<_ClassDialog> {
       _teacherCtrl.text = widget.existing!.teacher;
       _startTime = widget.existing!.startTime;
       _endTime = widget.existing!.endTime;
+      _weekType = widget.existing!.weekType;
     }
   }
 
@@ -786,12 +839,25 @@ class _ClassDialogState extends State<_ClassDialog> {
   }
 
   Future<void> _pickTime({required bool isStart}) async {
+    final dark = isDark(context);
     final picked = await showTimePicker(
       context: context,
       initialTime: _parseTOD(isStart ? _startTime : _endTime),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(primary: primaryColor),
+          colorScheme: dark
+              ? ColorScheme.dark(
+                  primary: primaryColor,
+                  onPrimary: Colors.white,
+                  surface: const Color(0xFF1E1E24),
+                  onSurface: Colors.white,
+                )
+              : ColorScheme.light(
+                  primary: primaryColor,
+                  onPrimary: Colors.white,
+                  surface: Colors.white,
+                  onSurface: Colors.black87,
+                ),
         ),
         child: child!,
       ),
@@ -825,6 +891,7 @@ class _ClassDialogState extends State<_ClassDialog> {
       endTime: _endTime,
       room: _roomCtrl.text.trim(),
       teacher: _teacherCtrl.text.trim(),
+      weekType: _weekType,
     );
 
     try {
@@ -845,96 +912,220 @@ class _ClassDialogState extends State<_ClassDialog> {
     final dark = isDark(context);
     final isEdit = widget.existing != null;
 
-    return AlertDialog(
-      backgroundColor: dark ? const Color(0xFF1E1E24) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Text(
-        isEdit ? 'Edit Class' : 'Add New Class',
-        style: GoogleFonts.poppins(
-          fontWeight: FontWeight.bold,
-          color: dark ? Colors.white : primaryColor,
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      child: Container(
+        decoration: BoxDecoration(
+          color: dark ? const Color(0xFF1E1E24) : Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(28),
+            topRight: Radius.circular(28),
+            bottomLeft: Radius.circular(28),
+            bottomRight: Radius.circular(28),
+          ),
         ),
-      ),
-      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _SubjectAutocompleteField(
-              controller: _subjectCtrl,
-              label: 'Subject *',
-              icon: Icons.book_rounded,
-              dark: dark,
-              ref: widget.ref,
+            // ── Handle bar (like a bottom sheet) ──────────────────
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 4),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: dark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-            const SizedBox(height: 12),
-            // Time row
-            Row(
-              children: [
-                Expanded(
-                  child: _TimeButton(
-                    label: 'Start',
-                    time: _startTime,
-                    dark: dark,
-                    onTap: () => _pickTime(isStart: true),
-                  ),
+            const SizedBox(height: 8),
+
+            // ── Title ─────────────────────────────────────────────
+            Text(
+              isEdit ? 'Edit Class' : 'Add New Class',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: dark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isEdit
+                  ? 'Update the details of this class'
+                  : 'Fill in the details to add a new class',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: dark ? Colors.white54 : Colors.black45,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
+            // ── Form fields ───────────────────────────────────────
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _SubjectAutocompleteField(
+                      controller: _subjectCtrl,
+                      label: 'Subject *',
+                      icon: Icons.book_rounded,
+                      dark: dark,
+                      ref: widget.ref,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _TimeButton(
+                            label: 'Start',
+                            time: _startTime,
+                            dark: dark,
+                            onTap: () => _pickTime(isStart: true),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _TimeButton(
+                            label: 'End',
+                            time: _endTime,
+                            dark: dark,
+                            onTap: () => _pickTime(isStart: false),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _DialogField(
+                      controller: _roomCtrl,
+                      label: 'Room (optional)',
+                      icon: Icons.location_on_rounded,
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 12),
+                    _DialogField(
+                      controller: _teacherCtrl,
+                      label: 'Teacher (optional)',
+                      icon: Icons.person_rounded,
+                      dark: dark,
+                    ),
+                    const SizedBox(height: 16),
+                    // ── Week type selector ────────────────────────
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Repeats',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: dark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _WeekChip(
+                          label: 'Every Week',
+                          icon: Icons.repeat_rounded,
+                          selected: _weekType == null,
+                          dark: dark,
+                          onTap: () => setState(() => _weekType = null),
+                        ),
+                        const SizedBox(width: 8),
+                        _WeekChip(
+                          label: 'Week A',
+                          icon: Icons.looks_one_rounded,
+                          selected: _weekType == 'A',
+                          dark: dark,
+                          onTap: () => setState(() => _weekType = 'A'),
+                        ),
+                        const SizedBox(width: 8),
+                        _WeekChip(
+                          label: 'Week B',
+                          icon: Icons.looks_two_rounded,
+                          selected: _weekType == 'B',
+                          dark: dark,
+                          onTap: () => setState(() => _weekType = 'B'),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _TimeButton(
-                    label: 'End',
-                    time: _endTime,
-                    dark: dark,
-                    onTap: () => _pickTime(isStart: false),
+              ),
+            ),
+
+            // ── Buttons row (Cancel | Add) ─────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+              child: Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: dark ? Colors.white70 : Colors.black54,
+                        side: BorderSide(
+                          color: dark ? Colors.white24 : Colors.black12,
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _DialogField(
-              controller: _roomCtrl,
-              label: 'Room (optional)',
-              icon: Icons.location_on_rounded,
-              dark: dark,
-            ),
-            const SizedBox(height: 12),
-            _DialogField(
-              controller: _teacherCtrl,
-              label: 'Teacher (optional)',
-              icon: Icons.person_rounded,
-              dark: dark,
+                  const SizedBox(width: 12),
+                  // Add / Update button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saving ? null : _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              isEdit ? 'Yes, Update' : 'Yes, Add',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.of(context).pop(),
-          child: Text('Cancel',
-              style: GoogleFonts.inter(
-                  color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
-        ),
-        ElevatedButton(
-          onPressed: _saving ? null : _save,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          ),
-          child: _saving
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
-                )
-              : Text(isEdit ? 'Update' : 'Add',
-                  style:
-                      GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        ),
-      ],
     );
   }
 }
@@ -1187,6 +1378,77 @@ class _SubjectAutocompleteField extends StatelessWidget {
         onSelected: (Subject selection) {
           controller.text = selection.Title;
         },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEK TYPE CHIP (for the Repeats selector in the dialog)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _WeekChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final bool dark;
+  final VoidCallback onTap;
+
+  const _WeekChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.dark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? primaryColor
+                : (dark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.grey.shade100),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? primaryColor
+                  : (dark ? Colors.white12 : Colors.black12),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected
+                    ? Colors.white
+                    : (dark ? Colors.white54 : Colors.black45),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: selected
+                      ? Colors.white
+                      : (dark ? Colors.white54 : Colors.black54),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

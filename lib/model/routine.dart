@@ -22,6 +22,17 @@ const List<String> kDays = [
 /// Today's day name — Dart weekday: 1=Mon…7=Sun → index 0=Sun via mod.
 String get todayName => kDays[DateTime.now().weekday % 7];
 
+/// Current ISO week number (1-53). Odd = Week A, Even = Week B.
+int get currentIsoWeek {
+  final now = DateTime.now();
+  final startOfYear = DateTime(now.year, 1, 1);
+  final days = now.difference(startOfYear).inDays;
+  return ((days + startOfYear.weekday - 1) ~/ 7) + 1;
+}
+
+/// Returns 'A' for odd ISO weeks, 'B' for even ISO weeks.
+String get currentWeekType => currentIsoWeek.isOdd ? 'A' : 'B';
+
 // ═══════════════════════════════════════════════════════════════════
 // DATA MODEL
 // ═══════════════════════════════════════════════════════════════════
@@ -30,9 +41,11 @@ class ClassEntry {
   final String id;
   final String subject;
   final String startTime; // "HH:mm" 24-hour
-  final String endTime; // "HH:mm" 24-hour
+  final String endTime;   // "HH:mm" 24-hour
   final String room;
   final String teacher;
+  /// null = every week, 'A' = odd weeks only, 'B' = even weeks only
+  final String? weekType;
 
   const ClassEntry({
     required this.id,
@@ -41,7 +54,14 @@ class ClassEntry {
     required this.endTime,
     required this.room,
     required this.teacher,
+    this.weekType,
   });
+
+  /// True if this class should be shown in the current week.
+  bool get isThisWeek {
+    if (weekType == null) return true;
+    return weekType == currentWeekType;
+  }
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -50,6 +70,7 @@ class ClassEntry {
     'endTime': endTime,
     'room': room,
     'teacher': teacher,
+    if (weekType != null) 'weekType': weekType,
   };
 
   factory ClassEntry.fromMap(Map<String, dynamic> map) => ClassEntry(
@@ -59,6 +80,7 @@ class ClassEntry {
     endTime: map['endTime'] as String? ?? '',
     room: map['room'] as String? ?? '',
     teacher: map['teacher'] as String? ?? '',
+    weekType: map['weekType'] as String?,
   );
 
   ClassEntry copyWith({
@@ -68,6 +90,7 @@ class ClassEntry {
     String? endTime,
     String? room,
     String? teacher,
+    Object? weekType = _sentinel,
   }) => ClassEntry(
     id: id ?? this.id,
     subject: subject ?? this.subject,
@@ -75,7 +98,10 @@ class ClassEntry {
     endTime: endTime ?? this.endTime,
     room: room ?? this.room,
     teacher: teacher ?? this.teacher,
+    weekType: weekType == _sentinel ? this.weekType : weekType as String?,
   );
+
+  static const Object _sentinel = Object();
 
   /// True if current time falls within this class period.
   bool get isOngoing {
@@ -119,7 +145,7 @@ String? batchIdFromRaw(String raw) {
 /// Call `ref.invalidate(academicInfoProvider)` after saving new info.
 final academicInfoProvider = FutureProvider<String>((ref) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('academic_info') ?? '';
+  return prefs.getString('academic_info') ?? '7DCSE.2';
 });
 
 /// Firestore document ID derived from the current academic_info.

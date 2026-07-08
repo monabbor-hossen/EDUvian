@@ -65,7 +65,7 @@ class MainLayoutScreen extends StatelessWidget {
                           // Right items: Calculator + Settings
                           Row(
                             children: [
-                              _buildNavItem(Icons.calculate_rounded, 'Calculator', 3, dark),
+                              _buildNavItem(Icons.calculate_rounded, 'Calc', 3, dark),
                               _buildNavItem(Icons.settings_rounded, 'Settings', 4, dark),
                             ],
                           ),
@@ -96,7 +96,7 @@ class MainLayoutScreen extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => _onTap(index),
       child: Container(
-        width: 68,
+        width: 56,
         height: 60,
         alignment: Alignment.center,
         child: Column(
@@ -117,7 +117,7 @@ class MainLayoutScreen extends StatelessWidget {
               style: GoogleFonts.poppins(
                 color: isSelected ? primaryColor : (dark ? Colors.white54 : Colors.black45),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                fontSize: 11,
+                fontSize: 10,
                 letterSpacing: 0.5,
               ),
             ),
