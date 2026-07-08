@@ -642,3 +642,15 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
 }
 
 final semesterProvider = StateProvider<String?>((ref) => null);
+
+/// Converts a 24-hour "HH:mm" string to a 12-hour "h:mm a" string.
+String format12Hour(String time24) {
+  final parts = time24.split(':');
+  if (parts.length < 2) return time24;
+  int hour = int.tryParse(parts[0]) ?? 0;
+  final minute = parts[1];
+  final period = hour >= 12 ? 'PM' : 'AM';
+  if (hour == 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  return '$hour:$minute $period';
+}

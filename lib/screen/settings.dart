@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth_service.dart';
 import '../main.dart';
+import '../model/routine.dart';
 import '../model/widgets.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -184,6 +185,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   }
                                   if (raw.isNotEmpty) {
                                     await _saveAcademicInfo(raw);
+                                    // Invalidate so routineProvider reacts to the new batch ID
+                                    ref.invalidate(academicInfoProvider);
                                   }
                                   // ignore: unused_result
                                   ref.refresh(authStateProvider);

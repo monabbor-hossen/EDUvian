@@ -47,18 +47,28 @@ class MainLayoutScreen extends StatelessWidget {
                     ),
                     child: Container(
                       height: 75,
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Left item: Home
-                          _buildNavItem(Icons.space_dashboard_rounded, 'Home', 0, dark),
-                          
-                          // Spacer to make room for center FAB in the notch
+                          // Left items: Home + Routine
+                          Row(
+                            children: [
+                              _buildNavItem(Icons.space_dashboard_rounded, 'Home', 0, dark),
+                              _buildNavItem(Icons.calendar_month_rounded, 'Routine', 1, dark),
+                            ],
+                          ),
+
+                          // Spacer for center FAB notch
                           const SizedBox(width: 80),
-                          
-                          // Right item: Settings
-                          _buildNavItem(Icons.settings_rounded, 'Settings', 2, dark),
+
+                          // Right items: Calculator + Settings
+                          Row(
+                            children: [
+                              _buildNavItem(Icons.calculate_rounded, 'Calculator', 3, dark),
+                              _buildNavItem(Icons.settings_rounded, 'Settings', 4, dark),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -66,11 +76,11 @@ class MainLayoutScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Center floating button: Calculator
+
+            // Center FAB: Messages (index 2)
             Positioned(
-              bottom: 45, // sits perfectly in the curved notch
-              child: _buildCenterButton(Icons.calculate_rounded, 1, dark),
+              bottom: 45,
+              child: _buildCenterButton(Icons.forum_rounded, 2, dark),
             ),
           ],
         ),
@@ -86,7 +96,7 @@ class MainLayoutScreen extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () => _onTap(index),
       child: Container(
-        width: 80,
+        width: 68,
         height: 60,
         alignment: Alignment.center,
         child: Column(
