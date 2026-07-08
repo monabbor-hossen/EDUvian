@@ -38,9 +38,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _saveAcademicInfo(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('academic_info', value);
-    setState(() {
-      _academicInfo = value;
-    });
+    if (mounted) {
+      setState(() {
+        _academicInfo = value;
+      });
+    }
   }
 
   @override
@@ -114,9 +116,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         const SizedBox(height: 8),
                                         TextField(
                                           controller: _academicController,
+                                          textCapitalization: TextCapitalization.characters,
                                           style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
                                           decoration: InputDecoration(
-                                            hintText: "e.g. 7DCSE.2",
+                                            hintText: "e.g. 7DCSE.2 or 7DCSE",
                                             hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
                                             isDense: true,
                                             border: const UnderlineInputBorder(),
@@ -124,7 +127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         ),
                                       ],
                                     )
-                                  : Column(
+                                   : Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
@@ -135,16 +138,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             fontSize: 18,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          _academicInfo,
-                                          style: GoogleFonts.inter(
-                                            color: dark ? Colors.white70 : primaryColor,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 6),
+                                        // Parsed academic info chips
+                                        _AcademicChips(raw: _academicInfo, dark: dark),
+                                        const SizedBox(height: 4),
                                         Text(
                                           user.email ?? '',
                                           style: GoogleFonts.inter(
@@ -161,13 +158,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 color: primaryColor,
                               ),
                               onPressed: () async {
-                                if (_isEditingName) {
+                                 if (_isEditingName) {
+                                  // Normalise to uppercase before any processing
+                                  final raw = _academicController.text.trim().toUpperCase();
+                                  // Validate format before saving
+                                  if (raw.isNotEmpty && parseAcademicInfo(raw) == null) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: Colors.redAccent.shade700,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          content: Text(
+                                            'Invalid format. Use e.g. 7DCSE.2 or 7DCSE',
+                                            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return; // Don't save or close editing
+                                  }
                                   // Save name and academic info
                                   if (_nameController.text.trim().isNotEmpty) {
                                     await user.updateDisplayName(_nameController.text.trim());
                                   }
-                                  await _saveAcademicInfo(_academicController.text.trim());
-                                  
+                                  if (raw.isNotEmpty) {
+                                    await _saveAcademicInfo(raw);
+                                  }
                                   // ignore: unused_result
                                   ref.refresh(authStateProvider);
                                 } else {
@@ -264,6 +281,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _AcademicChips — displays parsed Semester / Department / Section chips
+// ---------------------------------------------------------------------------
+class _AcademicChips extends StatelessWidget {
+  final String raw;
+  final bool dark;
+
+  const _AcademicChips({required this.raw, required this.dark});
+
+  @override
+  Widget build(BuildContext context) {
+    final info = parseAcademicInfo(raw);
+
+    if (info == null) {
+      // Fallback: just show the raw string if it can't be parsed
+      return Text(
+        raw,
+        style: GoogleFonts.inter(
+          color: dark ? Colors.white70 : primaryColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: [
+        _chip(
+          label: 'Semester ${info.semester}',
+          icon: Icons.school_rounded,
+          color: primaryColor,
+          dark: dark,
+        ),
+        _chip(
+          label: info.department,
+          icon: Icons.account_balance_rounded,
+          color: const Color(0xFF3B1F8F),
+          dark: dark,
+        ),
+        // Only show Section chip when a section number was provided
+        if (info.section != null)
+          _chip(
+            label: 'Section ${info.section}',
+            icon: Icons.groups_rounded,
+            color: secondaryColor,
+            dark: dark,
+          ),
+      ],
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required bool dark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: dark ? 0.22 : 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
