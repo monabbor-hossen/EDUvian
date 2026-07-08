@@ -639,7 +639,7 @@ class _ClassCard extends ConsumerWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
-                            decoration: (entry.dateEvents?[_formatDate(selectedDate)] == 'Canceled') 
+                            decoration: (entry.dateEvents?[_formatDate(selectedDate)]?.toLowerCase().contains('cancel') == true) 
                                 ? TextDecoration.lineThrough 
                                 : null,
                             color: ongoing
@@ -648,39 +648,7 @@ class _ClassCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      if (entry.dateEvents?[_formatDate(selectedDate)] != null)
-                        Container(
-                          margin: const EdgeInsets.only(left: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
-                                ? Colors.red.withValues(alpha: 0.15)
-                                : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
-                                    ? Colors.blue.withValues(alpha: 0.15)
-                                    : Colors.orange.withValues(alpha: 0.15)),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
-                                  ? Colors.red.withValues(alpha: 0.5)
-                                  : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
-                                      ? Colors.blue.withValues(alpha: 0.5)
-                                      : Colors.orange.withValues(alpha: 0.5)),
-                            ),
-                          ),
-                          child: Text(
-                            entry.dateEvents![_formatDate(selectedDate)]!,
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
-                                  ? Colors.red
-                                  : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
-                                      ? Colors.blue
-                                      : Colors.orange),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
+                      // Event badge removed from here
                       if (entry.weekType != null)
                         Container(
                           margin: const EdgeInsets.only(left: 4),
@@ -742,6 +710,48 @@ class _ClassCard extends ConsumerWidget {
                       label: entry.teacher,
                       light: ongoing,
                       dark: dark,
+                    ),
+                  ],
+                  if (entry.dateEvents?[_formatDate(selectedDate)] != null) ...[
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: entry.dateEvents![_formatDate(selectedDate)]!
+                          .split(',')
+                          .map((e) => e.trim())
+                          .where((e) => e.isNotEmpty)
+                          .map((eventText) {
+                        final lower = eventText.toLowerCase();
+                        Color baseColor = primaryColor;
+                        if (lower.contains('cancel')) {
+                          baseColor = Colors.red;
+                        } else if (lower.contains('assignment')) {
+                          baseColor = Colors.blue;
+                        } else if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) {
+                          baseColor = Colors.orange;
+                        }
+                        
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: baseColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: baseColor.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          child: Text(
+                            eventText,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: baseColor,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ],
@@ -977,13 +987,16 @@ void _showClassActionSheet(
   final service = ref.read(routineServiceProvider);
   final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
 
+  final initialStatus = entry.dateEvents?[dateStr];
+  final ctrl = TextEditingController(text: initialStatus ?? '');
+
   void _updateStatus(String? status) async {
     Navigator.pop(context);
     final events = entry.dateEvents != null ? Map<String, String>.from(entry.dateEvents!) : <String, String>{};
-    if (status == null) {
+    if (status == null || status.trim().isEmpty) {
       events.remove(dateStr);
     } else {
-      events[dateStr] = status;
+      events[dateStr] = status.trim();
     }
     
     try {
@@ -1000,87 +1013,152 @@ void _showClassActionSheet(
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (ctx) {
-      return Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: dark ? const Color(0xFF1E1E24) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Class Options',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: dark ? Colors.white : Colors.black87,
+      return Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: dark ? const Color(0xFF1E1E24) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Class Options',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: dark ? Colors.white : Colors.black87,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.cancel_rounded, color: Colors.red),
-              title: Text('Cancel Class', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () => _updateStatus('Canceled'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.assignment_turned_in_rounded, color: Colors.orange),
-              title: Text('Next class is CT', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () => _updateStatus('CT'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.school_rounded, color: Colors.orange),
-              title: Text('Next class is Mid', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () => _updateStatus('Mid'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              leading: const Icon(Icons.assignment_rounded, color: Colors.blue),
-              title: Text('Tomorrow submit assignment', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-              onTap: () => _updateStatus('Assignment'),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
-            ),
-            if (entry.dateEvents?.containsKey(dateStr) ?? false) ...[
-              const SizedBox(height: 8),
-              ListTile(
-                leading: const Icon(Icons.clear_rounded, color: Colors.grey),
-                title: Text('Clear Status', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                onTap: () => _updateStatus(null),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+              const SizedBox(height: 16),
+              
+              // Custom text input
+              TextField(
+                controller: ctrl,
+                minLines: 3,
+                maxLines: 5,
+                style: GoogleFonts.inter(
+                  color: dark ? Colors.white : Colors.black87,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Any class update? e.g. "Canceled"',
+                  hintStyle: GoogleFonts.inter(
+                    color: dark ? Colors.white38 : Colors.black38,
+                  ),
+                  filled: true,
+                  fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: dark ? Colors.white12 : Colors.black12,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: dark ? Colors.white12 : Colors.black12,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: primaryColor, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Quick-fill chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  'Canceled',
+                  'Class Test',
+                  'Mid',
+                  'Assignment',
+                ].map((text) => ActionChip(
+                  label: Text(text, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                  backgroundColor: dark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
+                  side: BorderSide(color: dark ? Colors.white12 : Colors.black12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  onPressed: () {
+                    final current = ctrl.text.trim();
+                    if (current.isEmpty) {
+                      ctrl.text = text;
+                    } else {
+                      final parts = current.split(',').map((e) => e.trim()).toList();
+                      if (parts.contains(text)) {
+                        parts.remove(text);
+                        ctrl.text = parts.join(', ');
+                      } else {
+                        ctrl.text = current + (current.endsWith(',') ? ' ' : ', ') + text;
+                      }
+                    }
+                  },
+                )).toList(),
+              ),
+              
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  if (initialStatus != null) ...[
+                    Expanded(
+                      flex: 1,
+                      child: OutlinedButton(
+                        onPressed: () => _updateStatus(null),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          side: BorderSide(color: Colors.red.withValues(alpha: 0.5)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text('Clear', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: () => _updateStatus(ctrl.text),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text('Save Status', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(height: 1, color: Colors.black12),
+              ),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showClassDialog(context, ref, day, existing: entry);
+                },
+                icon: const Icon(Icons.edit_rounded, size: 18),
+                label: Text('Edit Class Details', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: dark ? Colors.white70 : Colors.black87,
+                  side: BorderSide(color: dark ? Colors.white24 : Colors.black12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ],
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Divider(height: 1, color: Colors.black12),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(context);
-                _showClassDialog(context, ref, day, existing: entry);
-              },
-              icon: const Icon(Icons.edit_rounded, size: 18),
-              label: Text('Edit Class Details', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ],
+          ),
         ),
       );
     },
