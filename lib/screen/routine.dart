@@ -22,26 +22,16 @@ class RoutineManagerScreen extends ConsumerStatefulWidget {
       _RoutineManagerScreenState();
 }
 
-class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
+  late DateTime _selectedDate;
+  late DateTime _currentMonth;
 
   @override
   void initState() {
     super.initState();
-    // Start on today's tab
-    final todayIndex = kDays.indexOf(todayName);
-    _tabController = TabController(
-      length: kDays.length,
-      vsync: this,
-      initialIndex: todayIndex < 0 ? 0 : todayIndex,
-    );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+    final now = DateTime.now();
+    _selectedDate = DateTime(now.year, now.month, now.day);
+    _currentMonth = DateTime(now.year, now.month, 1);
   }
 
   @override
@@ -133,7 +123,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(dark, rawAcademicInfo),
+        appBar: _buildAppBar(dark, rawAcademicInfo, _selectedDate),
         floatingActionButton: _buildFab(dark, batchId),
         body: routineAsync.when(
           loading: () => const Center(
@@ -142,20 +132,35 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
           error: (e, _) => _ErrorView(message: e.toString()),
           data: (routine) => Column(
             children: [
-              // ── Tab Bar ──────────────────────────────────────────────
-              _DayTabBar(controller: _tabController, dark: dark),
-              // ── Tab Views ────────────────────────────────────────────
+              // ── Date Scroller ─────────────────────────────────────────
+              _DateScroller(
+                currentMonth: _currentMonth,
+                selectedDate: _selectedDate,
+                dark: dark,
+                onDateSelected: (date) {
+                  setState(() {
+                    _selectedDate = date;
+                  });
+                },
+                onMonthChanged: (month) {
+                  setState(() {
+                    _currentMonth = month;
+                  });
+                },
+              ),
+              // ── Tab View (Now single list based on selected date) ──────
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: kDays.map((day) {
-                    final classes = routine[day] ?? [];
+                child: Builder(
+                  builder: (context) {
+                    final dayString = kDays[_selectedDate.weekday % 7];
+                    final classes = routine[dayString] ?? [];
                     return _DayTabBody(
-                      day: day,
+                      day: dayString,
                       classes: classes,
                       dark: dark,
+                      selectedDate: _selectedDate,
                     );
-                  }).toList(),
+                  },
                 ),
               ),
             ],
@@ -165,7 +170,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(bool dark, String? batchId) {
+  PreferredSizeWidget _buildAppBar(bool dark, String? batchId, DateTime selectedDate) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -211,7 +216,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
                     border: Border.all(color: primaryColor.withValues(alpha: 0.4)),
                   ),
                   child: Text(
-                    'Week $currentWeekType',
+                    'Week ${weekTypeFor(selectedDate)}',
                     style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -229,7 +234,10 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
 
   Widget _buildFab(bool dark, String? batchId) {
     return FloatingActionButton.extended(
-      onPressed: () => _showClassDialog(context, ref, kDays[_tabController.index]),
+      onPressed: () {
+        final dayStr = kDays[_selectedDate.weekday % 7];
+        _showClassDialog(context, ref, dayStr);
+      },
       backgroundColor: primaryColor,
       foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
@@ -241,83 +249,222 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DAY TAB BAR
+// DATE SCROLLER
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _DayTabBar extends StatelessWidget {
-  final TabController controller;
+class _DateScroller extends StatefulWidget {
+  final DateTime currentMonth;
+  final DateTime selectedDate;
   final bool dark;
+  final ValueChanged<DateTime> onDateSelected;
+  final ValueChanged<DateTime> onMonthChanged;
 
-  const _DayTabBar({required this.controller, required this.dark});
+  const _DateScroller({
+    required this.currentMonth,
+    required this.selectedDate,
+    required this.dark,
+    required this.onDateSelected,
+    required this.onMonthChanged,
+  });
 
-  static const _abbrev = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  @override
+  State<_DateScroller> createState() => _DateScrollerState();
+}
+
+class _DateScrollerState extends State<_DateScroller> {
+  late ScrollController _scrollController;
+  final double _itemWidth = 64.0; // width of each date capsule + margin
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToSelectedDate();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_DateScroller oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentMonth != widget.currentMonth ||
+        oldWidget.selectedDate != widget.selectedDate) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToSelectedDate();
+      });
+    }
+  }
+
+  void _scrollToSelectedDate() {
+    if (!_scrollController.hasClients) return;
+    
+    // Only scroll if the selected date is in the currently viewed month
+    if (widget.selectedDate.year == widget.currentMonth.year && 
+        widget.selectedDate.month == widget.currentMonth.month) {
+      final targetPosition = (widget.selectedDate.day - 1) * _itemWidth;
+      final maxExtent = _scrollController.position.maxScrollExtent;
+      final offset = targetPosition.clamp(0.0, maxExtent);
+      
+      _scrollController.animateTo(
+        offset,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  int get _daysInMonth {
+    final date = widget.currentMonth;
+    return DateTime(date.year, date.month + 1, 0).day;
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
+  }
+
+  void _changeMonth(int offset) {
+    final newMonth = DateTime(
+      widget.currentMonth.year,
+      widget.currentMonth.month + offset,
+      1,
+    );
+    widget.onMonthChanged(newMonth);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      decoration: BoxDecoration(
-        color: dark
-            ? Colors.white.withValues(alpha: 0.07)
-            : Colors.black.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: dark ? Colors.white12 : Colors.black12,
+    final daysCount = _daysInMonth;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Month Selector
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${_monthName(widget.currentMonth.month)} ${widget.currentMonth.year}',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: widget.dark ? Colors.white : primaryColor,
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.chevron_left_rounded, color: widget.dark ? Colors.white70 : primaryColor),
+                    onPressed: () => _changeMonth(-1),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 16),
+                  IconButton(
+                    icon: Icon(Icons.chevron_right_rounded, color: widget.dark ? Colors.white70 : primaryColor),
+                    onPressed: () => _changeMonth(1),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
-      child: TabBar(
-        controller: controller,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        dividerColor: Colors.transparent,
-        indicator: BoxDecoration(
-          color: primaryColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: primaryColor.withValues(alpha: 0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        labelColor: Colors.white,
-        unselectedLabelColor: dark ? Colors.white54 : Colors.black45,
-        labelStyle:
-            GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 12),
-        unselectedLabelStyle:
-            GoogleFonts.poppins(fontWeight: FontWeight.w500, fontSize: 12),
-        indicatorSize: TabBarIndicatorSize.tab,
-        padding: const EdgeInsets.all(4),
-        tabs: List.generate(
-          kDays.length,
-          (i) {
-            final isToday = kDays[i] == todayName;
-            return Tab(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_abbrev[i]),
-                    if (isToday) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+        
+        // Horizontal Date List
+        SizedBox(
+          height: 90,
+          child: ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: daysCount,
+            itemBuilder: (context, index) {
+              final dayNum = index + 1;
+              final date = DateTime(widget.currentMonth.year, widget.currentMonth.month, dayNum);
+              final dayStr = kDays[date.weekday % 7];
+              final abbrev = dayStr.substring(0, 3).toUpperCase();
+              
+              final isSelected = date.year == widget.selectedDate.year &&
+                                 date.month == widget.selectedDate.month &&
+                                 date.day == widget.selectedDate.day;
+
+              return GestureDetector(
+                onTap: () => widget.onDateSelected(date),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: _itemWidth - 10,
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? primaryColor 
+                        : (widget.dark ? Colors.white.withValues(alpha: 0.05) : Colors.white),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: isSelected 
+                          ? primaryColor 
+                          : (widget.dark ? Colors.white12 : Colors.black.withValues(alpha: 0.08)),
+                      width: 1.5,
+                    ),
+                    boxShadow: isSelected ? [
+                      BoxShadow(
+                        color: primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ] : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        dayNum.toString(),
+                        style: GoogleFonts.inter(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: isSelected 
+                              ? Colors.white 
+                              : (widget.dark ? Colors.white : Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        abbrev,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected 
+                              ? Colors.white.withValues(alpha: 0.8) 
+                              : (widget.dark ? Colors.white54 : Colors.black45),
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -330,17 +477,19 @@ class _DayTabBody extends ConsumerWidget {
   final String day;
   final List<ClassEntry> classes;
   final bool dark;
+  final DateTime selectedDate;
 
   const _DayTabBody({
     required this.day,
     required this.classes,
     required this.dark,
+    required this.selectedDate,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Filter: show every-week classes + classes matching the current week type
-    final filtered = classes.where((c) => c.isThisWeek).toList();
+    // Filter: show every-week classes + classes matching the selected week type
+    final filtered = classes.where((c) => c.isThisWeekFor(selectedDate)).toList();
 
     if (filtered.isEmpty) {
       return _EmptyDayView(day: day, dark: dark);
@@ -357,6 +506,7 @@ class _DayTabBody extends ConsumerWidget {
           day: day,
           dark: dark,
           index: index,
+          selectedDate: selectedDate,
         ).animate().fadeIn(delay: (index * 60).ms).slideX(begin: 0.1);
       },
     );
@@ -372,13 +522,18 @@ class _ClassCard extends ConsumerWidget {
   final String day;
   final bool dark;
   final int index;
+  final DateTime selectedDate;
 
   const _ClassCard({
     required this.entry,
     required this.day,
     required this.dark,
     required this.index,
+    required this.selectedDate,
   });
+
+  String _formatDate(DateTime d) => 
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -484,12 +639,48 @@ class _ClassCard extends ConsumerWidget {
                           style: GoogleFonts.poppins(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
+                            decoration: (entry.dateEvents?[_formatDate(selectedDate)] == 'Canceled') 
+                                ? TextDecoration.lineThrough 
+                                : null,
                             color: ongoing
                                 ? Colors.white
                                 : (dark ? Colors.white : Colors.black87),
                           ),
                         ),
                       ),
+                      if (entry.dateEvents?[_formatDate(selectedDate)] != null)
+                        Container(
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
+                                ? Colors.red.withValues(alpha: 0.15)
+                                : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
+                                    ? Colors.blue.withValues(alpha: 0.15)
+                                    : Colors.orange.withValues(alpha: 0.15)),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
+                                  ? Colors.red.withValues(alpha: 0.5)
+                                  : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
+                                      ? Colors.blue.withValues(alpha: 0.5)
+                                      : Colors.orange.withValues(alpha: 0.5)),
+                            ),
+                          ),
+                          child: Text(
+                            entry.dateEvents![_formatDate(selectedDate)]!,
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: entry.dateEvents![_formatDate(selectedDate)] == 'Canceled'
+                                  ? Colors.red
+                                  : (entry.dateEvents![_formatDate(selectedDate)] == 'Assignment'
+                                      ? Colors.blue
+                                      : Colors.orange),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                       if (entry.weekType != null)
                         Container(
                           margin: const EdgeInsets.only(left: 4),
@@ -562,7 +753,7 @@ class _ClassCard extends ConsumerWidget {
                 _IconBtn(
                   icon: Icons.edit_rounded,
                   color: ongoing ? Colors.white70 : primaryColor,
-                  onTap: () => _showClassDialog(context, ref, day, existing: entry),
+                  onTap: () => _showClassActionSheet(context, ref, day, entry, selectedDate),
                 ),
                 const SizedBox(height: 4),
                 _IconBtn(
@@ -772,6 +963,131 @@ class _ErrorView extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ACTION SHEET
+// ─────────────────────────────────────────────────────────────────────────────
+
+void _showClassActionSheet(
+  BuildContext context,
+  WidgetRef ref,
+  String day,
+  ClassEntry entry,
+  DateTime selectedDate,
+) {
+  final dark = isDark(context);
+  final service = ref.read(routineServiceProvider);
+  final dateStr = '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+
+  void _updateStatus(String? status) async {
+    Navigator.pop(context);
+    final events = entry.dateEvents != null ? Map<String, String>.from(entry.dateEvents!) : <String, String>{};
+    if (status == null) {
+      events.remove(dateStr);
+    } else {
+      events[dateStr] = status;
+    }
+    
+    try {
+      await service.updateClass(day, entry.copyWith(
+        dateEvents: events.isEmpty ? null : events,
+      ));
+    } catch (e) {
+      if (context.mounted) _showError(context, e.toString());
+    }
+  }
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) {
+      return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: dark ? const Color(0xFF1E1E24) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Class Options',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: dark ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.cancel_rounded, color: Colors.red),
+              title: Text('Cancel Class', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              onTap: () => _updateStatus('Canceled'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.assignment_turned_in_rounded, color: Colors.orange),
+              title: Text('Next class is CT', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              onTap: () => _updateStatus('CT'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.school_rounded, color: Colors.orange),
+              title: Text('Next class is Mid', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              onTap: () => _updateStatus('Mid'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(Icons.assignment_rounded, color: Colors.blue),
+              title: Text('Tomorrow submit assignment', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              onTap: () => _updateStatus('Assignment'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+            ),
+            if (entry.dateEvents?.containsKey(dateStr) ?? false) ...[
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.clear_rounded, color: Colors.grey),
+                title: Text('Clear Status', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                onTap: () => _updateStatus(null),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                tileColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+              ),
+            ],
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(height: 1, color: Colors.black12),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                _showClassDialog(context, ref, day, existing: entry);
+              },
+              icon: const Icon(Icons.edit_rounded, size: 18),
+              label: Text('Edit Class Details', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ADD / EDIT CLASS DIALOG
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -808,10 +1124,12 @@ class _ClassDialogState extends State<_ClassDialog> {
   bool _saving = false;
   /// null = every week, 'A' = odd weeks, 'B' = even weeks
   String? _weekType;
+  late String _selectedDay;
 
   @override
   void initState() {
     super.initState();
+    _selectedDay = widget.day;
     if (widget.existing != null) {
       _subjectCtrl.text = widget.existing!.subject;
       _roomCtrl.text = widget.existing!.room;
@@ -896,9 +1214,17 @@ class _ClassDialogState extends State<_ClassDialog> {
 
     try {
       if (isEdit) {
-        await service.updateClass(widget.day, entry);
+        // If they change the day of an existing class, we might need to delete from old day 
+        // and add to new day. For simplicity in the UI, if they change the day, 
+        // we'll remove it from the old day and add to the new day.
+        if (_selectedDay != widget.day) {
+          await service.deleteClass(widget.day, entry.id);
+          await service.addClass(_selectedDay, entry);
+        } else {
+          await service.updateClass(widget.day, entry);
+        }
       } else {
-        await service.addClass(widget.day, entry);
+        await service.addClass(_selectedDay, entry);
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
@@ -970,6 +1296,62 @@ class _ClassDialogState extends State<_ClassDialog> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Day Selector Chips
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Day',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: dark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: kDays.map((day) {
+                          final isSelected = _selectedDay == day;
+                          final abbrev = day.substring(0, 3).toUpperCase();
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedDay = day),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? primaryColor
+                                    : (dark
+                                        ? Colors.white.withValues(alpha: 0.07)
+                                        : Colors.grey.shade100),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? primaryColor
+                                      : (dark ? Colors.white12 : Colors.black12),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                abbrev,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : (dark ? Colors.white54 : Colors.black54),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _SubjectAutocompleteField(
                       controller: _subjectCtrl,
                       label: 'Subject *',

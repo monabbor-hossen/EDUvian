@@ -23,15 +23,18 @@ const List<String> kDays = [
 String get todayName => kDays[DateTime.now().weekday % 7];
 
 /// Current ISO week number (1-53). Odd = Week A, Even = Week B.
-int get currentIsoWeek {
-  final now = DateTime.now();
-  final startOfYear = DateTime(now.year, 1, 1);
-  final days = now.difference(startOfYear).inDays;
+int get currentIsoWeek => isoWeekFor(DateTime.now());
+
+int isoWeekFor(DateTime date) {
+  final startOfYear = DateTime(date.year, 1, 1);
+  final days = date.difference(startOfYear).inDays;
   return ((days + startOfYear.weekday - 1) ~/ 7) + 1;
 }
 
 /// Returns 'A' for odd ISO weeks, 'B' for even ISO weeks.
-String get currentWeekType => currentIsoWeek.isOdd ? 'A' : 'B';
+String get currentWeekType => weekTypeFor(DateTime.now());
+
+String weekTypeFor(DateTime date) => isoWeekFor(date).isOdd ? 'A' : 'B';
 
 // ═══════════════════════════════════════════════════════════════════
 // DATA MODEL
@@ -46,6 +49,8 @@ class ClassEntry {
   final String teacher;
   /// null = every week, 'A' = odd weeks only, 'B' = even weeks only
   final String? weekType;
+  /// specific events for specific dates (key: "yyyy-MM-dd", value: "Canceled", "CT", etc.)
+  final Map<String, String>? dateEvents;
 
   const ClassEntry({
     required this.id,
@@ -55,12 +60,15 @@ class ClassEntry {
     required this.room,
     required this.teacher,
     this.weekType,
+    this.dateEvents,
   });
 
   /// True if this class should be shown in the current week.
-  bool get isThisWeek {
+  bool get isThisWeek => isThisWeekFor(DateTime.now());
+
+  bool isThisWeekFor(DateTime date) {
     if (weekType == null) return true;
-    return weekType == currentWeekType;
+    return weekType == weekTypeFor(date);
   }
 
   Map<String, dynamic> toMap() => {
@@ -71,6 +79,7 @@ class ClassEntry {
     'room': room,
     'teacher': teacher,
     if (weekType != null) 'weekType': weekType,
+    if (dateEvents != null) 'dateEvents': dateEvents,
   };
 
   factory ClassEntry.fromMap(Map<String, dynamic> map) => ClassEntry(
@@ -81,6 +90,9 @@ class ClassEntry {
     room: map['room'] as String? ?? '',
     teacher: map['teacher'] as String? ?? '',
     weekType: map['weekType'] as String?,
+    dateEvents: map['dateEvents'] != null 
+        ? Map<String, String>.from(map['dateEvents'] as Map) 
+        : null,
   );
 
   ClassEntry copyWith({
@@ -91,6 +103,7 @@ class ClassEntry {
     String? room,
     String? teacher,
     Object? weekType = _sentinel,
+    Object? dateEvents = _sentinel,
   }) => ClassEntry(
     id: id ?? this.id,
     subject: subject ?? this.subject,
@@ -99,6 +112,7 @@ class ClassEntry {
     room: room ?? this.room,
     teacher: teacher ?? this.teacher,
     weekType: weekType == _sentinel ? this.weekType : weekType as String?,
+    dateEvents: dateEvents == _sentinel ? this.dateEvents : dateEvents as Map<String, String>?,
   );
 
   static const Object _sentinel = Object();
