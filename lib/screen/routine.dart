@@ -564,337 +564,279 @@ class _ClassCard extends ConsumerWidget {
        }
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: ongoing
-            ? LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  primaryColor.withValues(alpha: 0.85),
-                  const Color(0xFF3B1F8F).withValues(alpha: 0.75),
-                ],
-              )
-            : (hasEvent && eventColors.length > 1
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: eventColors.map((c) => c.withValues(alpha: dark ? 0.2 : 0.15)).toList(),
-                  )
-                : null),
-        color: ongoing || (hasEvent && eventColors.length > 1)
-            ? null
-            : (hasEvent
-                ? eventColors.first.withValues(alpha: dark ? 0.15 : 0.08)
-                : (dark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.white.withValues(alpha: 0.7))),
-        border: Border.all(
-          color: ongoing
-              ? Colors.white.withValues(alpha: 0.2)
-              : (hasEvent
-                  ? eventColors.first.withValues(alpha: 0.4)
-                  : (dark ? Colors.white12 : Colors.black.withValues(alpha: 0.08))),
-          width: 1.2,
-        ),
-        boxShadow: ongoing
-            ? [
-                BoxShadow(
-                  color: primaryColor.withValues(alpha: 0.3),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+    final dotColor = ongoing
+        ? Colors.white70
+        : (dark ? Colors.white60 : primaryColor.withOpacity(0.7));
+
+    final popupMenuButton = Theme(
+      data: Theme.of(context).copyWith(
+        cardColor: dark ? const Color(0xFF2C2C32) : Colors.white,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: PopupMenuButton<String>(
+        padding: EdgeInsets.zero,
+        icon: Align(
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: const EdgeInsets.only(top:0, right: 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 4, height: 4, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+                const SizedBox(height: 3),
+                Container(width: 4, height: 4, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
+              ],
+            ),
+          ),
+        ),
+        iconSize: 20,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: dark ? const Color(0xFF2C2C32) : Colors.white,
+        onSelected: (value) {
+          if (value == 'edit') {
+            _showClassDialog(context, ref, day, existing: entry);
+          } else if (value == 'status') {
+            _showClassActionSheet(context, ref, day, entry, selectedDate);
+          } else if (value == 'delete') {
+            _confirmDelete(context, service, day, entry);
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit_rounded, size: 18, color: dark ? Colors.white70 : primaryColor),
+                const SizedBox(width: 10),
+                Text('Edit details', style: GoogleFonts.inter(fontSize: 14, color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'status',
+            child: Row(
+              children: [
+                Icon(Icons.event_note_rounded, size: 18, color: Colors.orange.shade600),
+                const SizedBox(width: 10),
+                Text('Add day update', style: GoogleFonts.inter(fontSize: 14, color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent),
+                const SizedBox(width: 10),
+                Text('Delete class', style: GoogleFonts.inter(fontSize: 14, color: Colors.redAccent, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return GestureDetector(
+      onTap: () => _showClassActionSheet(context, ref, day, entry, selectedDate),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: ongoing
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    primaryColor.withValues(alpha: 0.85),
+                    const Color(0xFF3B1F8F).withValues(alpha: 0.75),
+                  ],
+                )
+              : (hasEvent && eventColors.length > 1
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: eventColors.map((c) => c.withValues(alpha: dark ? 0.2 : 0.15)).toList(),
+                    )
+                  : null),
+          color: ongoing || (hasEvent && eventColors.length > 1)
+              ? null
+              : (hasEvent
+                  ? eventColors.first.withValues(alpha: dark ? 0.15 : 0.08)
+                  : (dark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.white.withValues(alpha: 0.7))),
+          border: Border.all(
+            color: ongoing
+                ? Colors.white.withValues(alpha: 0.2)
+                : (hasEvent
+                    ? eventColors.first.withValues(alpha: 0.4)
+                    : (dark ? Colors.white12 : Colors.black.withValues(alpha: 0.08))),
+            width: 1.2,
+          ),
+          boxShadow: ongoing
+              ? [BoxShadow(color: primaryColor.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))]
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        ),
+        child: Stack(
           children: [
-            // Time column
-            SizedBox(
-              width: 56,
-              child: Column(
+            // Card content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 40, 16),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    format12Hour(startTime),
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: ongoing ? Colors.white : (dark ? Colors.white70 : primaryColor),
-                    ),
-                  ),
-                  if (entry.getEventStartTime(dateStr) == null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      format12Hour(endTime),
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color: ongoing
-                            ? Colors.white60
-                            : (dark ? Colors.white38 : Colors.black38),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // Divider line
-            Container(
-              width: 2,
-              height: 60,
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: ongoing
-                    ? Colors.white38
-                    : primaryColor.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          entry.subject,
-                          style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            decoration: (eventText?.toLowerCase().contains('cancel') == true) 
-                                ? TextDecoration.lineThrough 
-                                : null,
-                            color: ongoing
-                                ? Colors.white
-                                : (dark ? Colors.white : Colors.black87),
-                          ),
-                        ),
-                      ),
-                      // Event badge removed from here
-                      if (entry.weekType != null)
-                        Container(
-                          margin: const EdgeInsets.only(left: 4),
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: ongoing
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : primaryColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: ongoing
-                                  ? Colors.white38
-                                  : primaryColor.withValues(alpha: 0.35),
-                            ),
-                          ),
-                          child: Text(
-                            'Wk ${entry.weekType}',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: ongoing ? Colors.white : primaryColor,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      if (ongoing)
-                        Container(
-                          margin: const EdgeInsets.only(left: 4),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'LIVE',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  if (room.isNotEmpty)
-                    _InfoRow(
-                      icon: Icons.location_on_rounded,
-                      label: room,
-                      light: ongoing,
-                      dark: dark,
-                    ),
-                  if (entry.teacher.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    _InfoRow(
-                      icon: Icons.person_rounded,
-                      label: entry.teacher,
-                      light: ongoing,
-                      dark: dark,
-                    ),
-                  ],
-                  if (eventText != null && eventText.trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: eventText
-                          .split(',')
-                          .map((e) => e.trim())
-                          .where((e) => e.isNotEmpty)
-                          .map((et) {
-                        final lower = et.toLowerCase();
-                        Color baseColor = primaryColor;
-                        if (lower.contains('cancel')) {
-                          baseColor = Colors.red;
-                        } else if (lower.contains('assignment')) {
-                          baseColor = Colors.blue;
-                        } else if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) {
-                          baseColor = Colors.orange;
-                        } else if (lower.contains('online')) {
-                          baseColor = Colors.teal;
-                        }
-                        
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: baseColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: baseColor.withValues(alpha: 0.5),
-                            ),
-                          ),
-                          child: Text(
-                            et,
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: baseColor,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // Action Menu (Two dots)
-            Theme(
-              data: Theme.of(context).copyWith(
-                cardColor: dark ? const Color(0xFF2C2C32) : Colors.white,
-              ),
-              child: PopupMenuButton<String>(
-                padding: EdgeInsets.zero,
-                icon: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: ongoing
-                              ? Colors.white70
-                              : (dark ? Colors.white60 : primaryColor.withOpacity(0.7)),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: ongoing
-                              ? Colors.white70
-                              : (dark ? Colors.white60 : primaryColor.withOpacity(0.7)),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                color: dark ? const Color(0xFF2C2C32) : Colors.white,
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    _showClassDialog(context, ref, day, existing: entry);
-                  } else if (value == 'status') {
-                    _showClassActionSheet(context, ref, day, entry, selectedDate);
-                  } else if (value == 'delete') {
-                    _confirmDelete(context, service, day, entry);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
+                  // Time column
+                  SizedBox(
+                    width: 56,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.edit_rounded, size: 18, color: dark ? Colors.white70 : primaryColor),
-                        const SizedBox(width: 10),
                         Text(
-                          'Edit details',
+                          format12Hour(startTime),
                           style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: dark ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: ongoing ? Colors.white : (dark ? Colors.white70 : primaryColor),
                           ),
                         ),
+                        if (entry.getEventStartTime(dateStr) == null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            format12Hour(endTime),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: ongoing ? Colors.white60 : (dark ? Colors.white38 : Colors.black38),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 'status',
-                    child: Row(
-                      children: [
-                        Icon(Icons.event_note_rounded, size: 18, color: Colors.orange.shade600),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Add day update',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: dark ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                  // Divider line
+                  Container(
+                    width: 2,
+                    height: 60,
+                    margin: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: ongoing ? Colors.white38 : primaryColor.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
+                  // Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Delete class',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entry.subject,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: (eventText?.toLowerCase().contains('cancel') == true)
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: ongoing ? Colors.white : (dark ? Colors.white : Colors.black87),
+                                ),
+                              ),
+                            ),
+                            if (entry.weekType != null)
+                              Container(
+                                margin: const EdgeInsets.only(left: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: ongoing ? Colors.white.withValues(alpha: 0.2) : primaryColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: ongoing ? Colors.white38 : primaryColor.withValues(alpha: 0.35),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Wk ${entry.weekType}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: ongoing ? Colors.white : primaryColor,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            if (ongoing)
+                              Container(
+                                margin: const EdgeInsets.only(left: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  'LIVE',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
+                        const SizedBox(height: 6),
+                        if (room.isNotEmpty)
+                          _InfoRow(icon: Icons.location_on_rounded, label: room, light: ongoing, dark: dark),
+                        if (entry.teacher.isNotEmpty) ...[
+                          const SizedBox(height: 3),
+                          _InfoRow(icon: Icons.person_rounded, label: entry.teacher, light: ongoing, dark: dark),
+                        ],
+                        if (eventText != null && eventText.trim().isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            children: eventText
+                                .split(',')
+                                .map((e) => e.trim())
+                                .where((e) => e.isNotEmpty)
+                                .map((et) {
+                              final lower = et.toLowerCase();
+                              Color baseColor = primaryColor;
+                              if (lower.contains('cancel')) baseColor = Colors.red;
+                              else if (lower.contains('assignment')) baseColor = Colors.blue;
+                              else if (lower.contains('ct') || lower.contains('mid') || lower.contains('test')) baseColor = Colors.orange;
+                              else if (lower.contains('online')) baseColor = Colors.teal;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: baseColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: baseColor.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  et,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: baseColor,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                 ],
               ),
+            ),
+
+            // Two-dot popup menu pinned to top-right
+            Positioned(
+              top: 0,
+              right: 0,
+              child: popupMenuButton,
             ),
           ],
         ),
@@ -2202,3 +2144,4 @@ class _WeekChip extends StatelessWidget {
     );
   }
 }
+
