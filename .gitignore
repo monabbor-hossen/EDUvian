@@ -32,7 +32,6 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-/assets/eduvian-9c08e-firebase-adminsdk-fbsvc-a70028ce91.json
 # Symbolication related
 app.*.symbols
 
