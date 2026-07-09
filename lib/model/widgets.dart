@@ -726,8 +726,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('academic_info', raw);
     
-    // Subscribe to new topic for notifications
-    await NotificationService().subscribeToBatchTopic(raw);
+    // Subscribe to new topic for notifications (fire-and-forget to avoid blocking UI)
+    NotificationService().subscribeToBatchTopic(raw);
     
     if (mounted) Navigator.of(context).pop(true);
   }

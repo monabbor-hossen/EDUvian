@@ -290,7 +290,8 @@ class RoutineService {
   }
 
   /// Replaces the class with the same id as [entry] within [day].
-  Future<void> updateClass(String day, ClassEntry entry) async {
+  /// [notificationHint] is an optional descriptive body for the push notification.
+  Future<void> updateClass(String day, ClassEntry entry, {String? notificationHint}) async {
     final batchId = await _batchId();
     final ref = _ref(batchId);
 
@@ -305,6 +306,27 @@ class RoutineService {
       list[idx] = entry.toMap();
       txn.set(ref, {day: list}, SetOptions(merge: true));
     });
+    
+    // Notify all classmates about the update
+    final prefs = await SharedPreferences.getInstance();
+    final rawInfo = prefs.getString('academic_info');
+    if (rawInfo != null && rawInfo.isNotEmpty) {
+      final info = parseAcademicInfo(rawInfo);
+      if (info != null) {
+        String topic = 'batch_${info.semester}_${info.department}';
+        if (info.section != null) topic += '_${info.section}';
+        
+        // Use the rich hint if provided, otherwise fall back to a generic message
+        final body = notificationHint ?? "${entry.subject} on $day has been updated.";
+        
+        // Fire and forget the notification to avoid blocking the UI
+        NotificationService().sendNotificationToTopic(
+          title: "📢 Routine Updated",
+          body: body,
+          topicName: topic,
+        );
+      }
+    }
   }
 
   /// Removes the class with [classId] from [day].
@@ -321,6 +343,24 @@ class RoutineService {
         ..removeWhere((e) => e['id'] == classId);
       txn.set(ref, {day: list}, SetOptions(merge: true));
     });
+    
+    // Notify all classmates about the deletion
+    final prefs = await SharedPreferences.getInstance();
+    final rawInfo = prefs.getString('academic_info');
+    if (rawInfo != null && rawInfo.isNotEmpty) {
+      final info = parseAcademicInfo(rawInfo);
+      if (info != null) {
+        String topic = 'batch_${info.semester}_${info.department}';
+        if (info.section != null) topic += '_${info.section}';
+        
+        // Fire and forget the notification to avoid blocking the UI
+        NotificationService().sendNotificationToTopic(
+          title: "Routine Updated",
+          body: "A class on $day was removed from the routine.",
+          topicName: topic,
+        );
+      }
+    }
   }
 }
 

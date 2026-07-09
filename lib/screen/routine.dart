@@ -794,21 +794,107 @@ class _ClassCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // Action icons
-            Column(
-              children: [
-                _IconBtn(
-                  icon: Icons.edit_rounded,
-                  color: ongoing ? Colors.white70 : primaryColor,
-                  onTap: () => _showClassActionSheet(context, ref, day, entry, selectedDate),
+            // Action Menu (Two dots)
+            Theme(
+              data: Theme.of(context).copyWith(
+                cardColor: dark ? const Color(0xFF2C2C32) : Colors.white,
+              ),
+              child: PopupMenuButton<String>(
+                padding: EdgeInsets.zero,
+                icon: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: ongoing
+                              ? Colors.white70
+                              : (dark ? Colors.white60 : primaryColor.withOpacity(0.7)),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: ongoing
+                              ? Colors.white70
+                              : (dark ? Colors.white60 : primaryColor.withOpacity(0.7)),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                _IconBtn(
-                  icon: Icons.delete_rounded,
-                  color: ongoing ? Colors.white54 : Colors.redAccent,
-                  onTap: () => _confirmDelete(context, service, day, entry),
-                ),
-              ],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: dark ? const Color(0xFF2C2C32) : Colors.white,
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    _showClassDialog(context, ref, day, existing: entry);
+                  } else if (value == 'status') {
+                    _showClassActionSheet(context, ref, day, entry, selectedDate);
+                  } else if (value == 'delete') {
+                    _confirmDelete(context, service, day, entry);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit_rounded, size: 18, color: dark ? Colors.white70 : primaryColor),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Edit details',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: dark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'status',
+                    child: Row(
+                      children: [
+                        Icon(Icons.event_note_rounded, size: 18, color: Colors.orange.shade600),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Add day update',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: dark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Delete class',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -916,21 +1002,25 @@ class _IconBtn extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final String? tooltip;
 
   const _IconBtn(
-      {required this.icon, required this.color, required this.onTap});
+      {required this.icon, required this.color, required this.onTap, this.tooltip});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(8),
+    return Tooltip(
+      message: tooltip ?? '',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: color),
         ),
-        child: Icon(icon, size: 16, color: color),
       ),
     );
   }
@@ -1047,11 +1137,29 @@ void _showClassActionSheet(
         if (roomCtrl.text.trim().isNotEmpty) 'room': roomCtrl.text.trim(),
       };
     }
+
+    // Build a rich, human-readable notification body
+    final monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final humanDate = '${kDays[selectedDate.weekday % 7]}, ${selectedDate.day} ${monthNames[selectedDate.month - 1]}';
+    
+    String notificationHint;
+    if (!hasText && !hasTimeOrRoom) {
+      // Clearing an event
+      notificationHint = 'Update cleared for ${entry.subject} on $humanDate.';
+    } else {
+      final parts = <String>[];
+      if (hasText) parts.add(status!.trim());
+      if (overrideStartTime != null) parts.add('Time: ${format12Hour(overrideStartTime!)}');
+      if (roomCtrl.text.trim().isNotEmpty) parts.add('Room: ${roomCtrl.text.trim()}');
+      notificationHint = '${parts.join(' • ')} — ${entry.subject} on $humanDate';
+    }
     
     try {
-      await service.updateClass(day, entry.copyWith(
-        dateEvents: events.isEmpty ? null : events,
-      ));
+      await service.updateClass(
+        day,
+        entry.copyWith(dateEvents: events.isEmpty ? null : events),
+        notificationHint: notificationHint,
+      );
     } catch (e) {
       if (context.mounted) _showError(context, e.toString());
     }

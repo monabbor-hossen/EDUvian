@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ---------------------------------------------------------------------------
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
@@ -56,6 +58,22 @@ class NotificationService {
     );
     
     await _localNotifications.initialize(settings: initSettings);
+
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        _localNotifications.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission(); // Request permissions on Android 13+
+
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'eduvian_high_importance_channel', // id
+        'EDUvian Notifications', // name
+        description: 'Used for important class and assignment updates.', // description
+        importance: Importance.max,
+      );
+      await androidImplementation.createNotificationChannel(channel);
+    }
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -144,7 +162,7 @@ class NotificationService {
     final topic = _generateTopicFromBatch(batchString);
     if (topic != null) {
       try {
-        await _fcm.subscribeToTopic(topic);
+        await _fcm.subscribeToTopic(topic).timeout(const Duration(seconds: 5));
         debugPrint("Successfully subscribed to FCM topic: $topic");
       } catch (e) {
         debugPrint("Error subscribing to FCM topic $topic: $e");
@@ -156,7 +174,7 @@ class NotificationService {
     final topic = _generateTopicFromBatch(batchString);
     if (topic != null) {
       try {
-        await _fcm.unsubscribeFromTopic(topic);
+        await _fcm.unsubscribeFromTopic(topic).timeout(const Duration(seconds: 5));
         debugPrint("Successfully unsubscribed from FCM topic: $topic");
       } catch (e) {
         debugPrint("Error unsubscribing from FCM topic $topic: $e");
@@ -191,6 +209,18 @@ class NotificationService {
             'notification': {
               'title': title,
               'body': body,
+            },
+            'android': {
+              'notification': {
+                'channel_id': 'eduvian_high_importance_channel',
+              }
+            },
+            'apns': {
+              'payload': {
+                'aps': {
+                  'sound': 'default',
+                }
+              }
             },
             'data': {
               'click_action': 'FLUTTER_NOTIFICATION_CLICK',
