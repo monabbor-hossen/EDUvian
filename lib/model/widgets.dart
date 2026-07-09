@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/notification_service.dart';
 
 import 'department.dart';
 
@@ -724,6 +725,10 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('academic_info', raw);
+    
+    // Subscribe to new topic for notifications
+    await NotificationService().subscribeToBatchTopic(raw);
+    
     if (mounted) Navigator.of(context).pop(true);
   }
 

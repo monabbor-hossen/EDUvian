@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'core/notification_service.dart';
 import 'firebase_options.dart';
 import 'model/router.dart';
-import 'core/fcm_service.dart';
 
 final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await setupFCM();
+  await NotificationService().initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -21,9 +21,6 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Keeps the FCM topic subscription synced with the user's batch ID.
-    ref.watch(fcmSubscriptionProvider);
-
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
     

@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/auth_service.dart';
+import '../core/notification_service.dart';
 import '../main.dart';
 import '../model/routine.dart';
 import '../model/widgets.dart';
@@ -38,7 +39,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _saveAcademicInfo(String value) async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Unsubscribe from old topic if it exists and is different
+    if (_academicInfo.isNotEmpty && _academicInfo != value) {
+      await NotificationService().unsubscribeFromBatchTopic(_academicInfo);
+    }
+    
     await prefs.setString('academic_info', value);
+    
+    // Subscribe to new topic
+    await NotificationService().subscribeToBatchTopic(value);
+    
     if (mounted) {
       setState(() {
         _academicInfo = value;
@@ -272,6 +283,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onTap: () async {
                       if (isLoggedIn) {
                         final prefs = await SharedPreferences.getInstance();
+                        final currentInfo = prefs.getString('academic_info') ?? '';
+                        if (currentInfo.isNotEmpty) {
+                          await NotificationService().unsubscribeFromBatchTopic(currentInfo);
+                        }
                         await prefs.remove('academic_info');
                         // ignore: unused_result
                         ref.refresh(academicInfoProvider);
