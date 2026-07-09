@@ -21,7 +21,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEditingName = false;
   final _nameController = TextEditingController();
   final _academicController = TextEditingController();
-  String _academicInfo = ''; // Will be loaded from SharedPreferences
+  bool _notificationsEnabled = true;
+  String _academicInfo = '';
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       _academicInfo = prefs.getString('academic_info') ?? '';
       _academicController.text = _academicInfo;
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     });
   }
 
@@ -47,8 +49,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     
     await prefs.setString('academic_info', value);
     
-    // Subscribe to new topic
-    await NotificationService().subscribeToBatchTopic(value);
+    // Subscribe to new topic only if notifications are enabled
+    if (_notificationsEnabled) {
+      await NotificationService().subscribeToBatchTopic(value);
+    }
     
     if (mounted) {
       setState(() {
@@ -248,6 +252,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           activeColor: primaryColor,
                           onChanged: (value) {
                             ref.read(themeModeProvider.notifier).state = value ? ThemeMode.dark : ThemeMode.light;
+                          },
+                        ),
+                      ),
+                      Divider(
+                        color: dark ? Colors.white12 : Colors.black12,
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          _notificationsEnabled ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                          color: primaryColor,
+                        ),
+                        title: Text(
+                          "Push Notifications",
+                          style: GoogleFonts.inter(
+                            color: dark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        trailing: Switch(
+                          value: _notificationsEnabled,
+                          activeColor: primaryColor,
+                          onChanged: (value) async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('notifications_enabled', value);
+                            setState(() {
+                              _notificationsEnabled = value;
+                            });
+                            if (value) {
+                              if (_academicInfo.isNotEmpty) {
+                                await NotificationService().subscribeToBatchTopic(_academicInfo);
+                              }
+                            } else {
+                              if (_academicInfo.isNotEmpty) {
+                                await NotificationService().unsubscribeFromBatchTopic(_academicInfo);
+                              }
+                            }
                           },
                         ),
                       ),

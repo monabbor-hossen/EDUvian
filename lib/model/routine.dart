@@ -282,8 +282,8 @@ class RoutineService {
         
         await NotificationService().sendNotificationToTopic(
           title: "New Class Added",
-          body: "${entry.courseName} added to $day's routine.",
-          topic: topic,
+          body: "${entry.subject} added to $day's routine.",
+          topicName: topic,
         );
       }
     }

@@ -47,6 +47,7 @@ dependencies:
   firebase_messaging: ^15.2.10
   flutter_local_notifications: ^22.0.1
   http: ^1.6.0
+  googleapis_auth: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +87,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/icon/EDUvian-Icon.png
+    - assets/eduvian-9c08e-firebase-adminsdk-fbsvc-a70028ce91.json
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
