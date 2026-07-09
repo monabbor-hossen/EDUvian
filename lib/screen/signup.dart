@@ -2,8 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/auth_service.dart';
 import '../model/widgets.dart';
+import 'main_layout.dart' show checkedUids;
 
 // ─── Local State Providers ────────────────────────────────────────────────────
 final _signupEmailProvider = StateProvider<String>((ref) => '');
@@ -60,7 +62,12 @@ class SignupScreen extends ConsumerWidget {
       ref.read(_signupErrorProvider.notifier).state = null;
 
       try {
-        await ref.read(authServiceProvider).signUpWithEmail(email, pass);
+        final result = await ref.read(authServiceProvider).signUpWithEmail(email, pass);
+        // Brand-new email signup — clear any stale academic_info so the
+        // onboarding dialog will show when MainLayoutScreen mounts.
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('academic_info');
+        checkedUids.remove(result.user?.uid);
         if (context.mounted) context.go('/');
       } on FirebaseAuthException catch (e) {
         ref.read(_signupErrorProvider.notifier).state =

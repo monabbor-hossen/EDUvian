@@ -1,20 +1,58 @@
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/auth_service.dart';
+import '../model/routine.dart';
 import '../model/widgets.dart';
 
-class MainLayoutScreen extends StatelessWidget {
+// UIDs for which we've already run the academic-info check this app session.
+// Public so login.dart / signup.dart can clear entries for brand-new users.
+final Set<String> checkedUids = {};
+
+class MainLayoutScreen extends ConsumerStatefulWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainLayoutScreen({super.key, required this.navigationShell});
 
+  @override
+  ConsumerState<MainLayoutScreen> createState() => _MainLayoutScreenState();
+}
+
+class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
+  // Prevents scheduling the dialog more than once per widget instance.
+  bool _dialogPending = false;
+
+  /// Schedules the academic-info dialog to show after the current frame.
+  /// Safe to call from build() because it only uses postFrameCallback.
+  void _scheduleDialogIfNeeded(String uid) {
+    if (_dialogPending) return;          // already scheduled this instance
+    if (checkedUids.contains(uid)) return; // already shown this session
+    _dialogPending = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      // Mark as checked BEFORE showing so re-entrancy is impossible.
+      checkedUids.add(uid);
+
+      final prefs = await SharedPreferences.getInstance();
+      final info = prefs.getString('academic_info') ?? '';
+      if (info.isEmpty && mounted) {
+        await showAcademicInfoSetupDialog(context);
+        if (mounted) ref.invalidate(academicInfoProvider);
+      }
+    });
+  }
+
   void _onTap(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 
@@ -23,10 +61,17 @@ class MainLayoutScreen extends StatelessWidget {
     final dark = isDark(context);
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
 
+    // ref.watch fires on EVERY build — including the very first one and
+    // whenever auth state resolves. This is the reliable trigger point.
+    final authAsync = ref.watch(authStateProvider);
+    authAsync.whenData((user) {
+      if (user != null) _scheduleDialogIfNeeded(user.uid);
+    });
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true, // This allows the body to flow behind the floating nav bar
-      body: AppBackground(child: navigationShell),
+      body: AppBackground(child: widget.navigationShell),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Stack(
@@ -89,7 +134,7 @@ class MainLayoutScreen extends StatelessWidget {
   }
 
   Widget _buildNavItem(IconData icon, String label, int index, bool dark) {
-    final isSelected = navigationShell.currentIndex == index;
+    final isSelected = widget.navigationShell.currentIndex == index;
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     
     return GestureDetector(
@@ -128,7 +173,7 @@ class MainLayoutScreen extends StatelessWidget {
   }
 
   Widget _buildCenterButton(IconData icon, int index, bool dark) {
-    final isSelected = navigationShell.currentIndex == index;
+    final isSelected = widget.navigationShell.currentIndex == index;
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     
     return GestureDetector(

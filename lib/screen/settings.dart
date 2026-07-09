@@ -20,7 +20,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isEditingName = false;
   final _nameController = TextEditingController();
   final _academicController = TextEditingController();
-  String _academicInfo = '7DCSE.2'; // Default academic info
+  String _academicInfo = ''; // Will be loaded from SharedPreferences
 
   @override
   void initState() {
@@ -31,7 +31,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _loadAcademicInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _academicInfo = prefs.getString('academic_info') ?? '7DCSE.2';
+      _academicInfo = prefs.getString('academic_info') ?? '';
       _academicController.text = _academicInfo;
     });
   }
@@ -271,6 +271,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     onTap: () async {
                       if (isLoggedIn) {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.remove('academic_info');
+                        // ignore: unused_result
+                        ref.refresh(academicInfoProvider);
                         await ref.read(authServiceProvider).signOut();
                         if (context.mounted) context.go('/login');
                       } else {

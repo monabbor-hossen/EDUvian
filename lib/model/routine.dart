@@ -188,7 +188,7 @@ String? batchIdFromRaw(String raw) {
 /// Call `ref.invalidate(academicInfoProvider)` after saving new info.
 final academicInfoProvider = FutureProvider<String>((ref) async {
   final prefs = await SharedPreferences.getInstance();
-  return prefs.getString('academic_info') ?? '7DCSE.2';
+  return prefs.getString('academic_info') ?? '';
 });
 
 /// Firestore document ID derived from the current academic_info.

@@ -2,8 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/auth_service.dart';
 import '../model/widgets.dart';
+import 'main_layout.dart' show checkedUids;
 
 // ─── Local State Providers ────────────────────────────────────────────────────
 final _loginEmailProvider = StateProvider<String>((ref) => '');
@@ -58,7 +60,18 @@ class LoginScreen extends ConsumerWidget {
       try {
         final result =
             await ref.read(authServiceProvider).signInWithGoogle();
-        if (result != null && context.mounted) context.go('/');
+        if (result != null && context.mounted) {
+          // If this is a brand-new Google account, clear any stale academic_info
+          // so the onboarding dialog always shows for new users.
+          final isNew = result.additionalUserInfo?.isNewUser ?? false;
+          if (isNew) {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.remove('academic_info');
+            // Also remove from the session cache so MainLayoutScreen will check again.
+            checkedUids.remove(result.user?.uid);
+          }
+          if (context.mounted) context.go('/');
+        }
       } on FirebaseAuthException catch (e) {
         ref.read(_loginErrorProvider.notifier).state =
             e.message ?? 'Google sign-in failed.';
