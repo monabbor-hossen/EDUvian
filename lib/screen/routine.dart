@@ -564,33 +564,39 @@ class _ClassCard extends ConsumerWidget {
        }
     }
 
-    final dotColor = ongoing
-        ? Colors.white70
-        : (dark ? Colors.white60 : primaryColor.withOpacity(0.7));
-
-    final popupMenuButton = Theme(
+    // Corner tab action menu (styled like reference image)
+    final cornerMenuTab = Theme(
       data: Theme.of(context).copyWith(
-        cardColor: dark ? const Color(0xFF2C2C32) : Colors.white,
+        cardColor: dark ? const Color(0xFF1A0A14) : Colors.white,
       ),
       child: PopupMenuButton<String>(
         padding: EdgeInsets.zero,
-        icon: Align(
+        // Use 'child' instead of 'icon' so the container goes exactly to the edges without internal padding
+        child: Container(
+          width: 64,
+          height: 64,
           alignment: Alignment.topRight,
-          child: Padding(
-            padding: const EdgeInsets.only(top:0, right: 0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(width: 4, height: 4, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
-                const SizedBox(height: 3),
-                Container(width: 4, height: 4, decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle)),
-              ],
+          padding: const EdgeInsets.only(top: 22, right: 20),
+          decoration: BoxDecoration(
+            color: ongoing
+                ? Colors.white.withValues(alpha: 0.2)
+                : (dark ? const Color(0xFF3D0924) : primaryColor),
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(20), // Exactly matches card corner
+              bottomLeft: Radius.circular(64), // Massive radius for the organic blob curve
             ),
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 4.5, height: 4.5, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+              const SizedBox(height: 5),
+              Container(width: 4.5, height: 4.5, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
+            ],
+          ),
         ),
-        iconSize: 20,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: dark ? const Color(0xFF2C2C32) : Colors.white,
+        color: dark ? const Color(0xFF1A0A14) : Colors.white,
         onSelected: (value) {
           if (value == 'edit') {
             _showClassDialog(context, ref, day, existing: entry);
@@ -832,11 +838,11 @@ class _ClassCard extends ConsumerWidget {
               ),
             ),
 
-            // Two-dot popup menu pinned to top-right
+            // Corner action tab pinned to top-right
             Positioned(
               top: 0,
               right: 0,
-              child: popupMenuButton,
+              child: cornerMenuTab,
             ),
           ],
         ),
