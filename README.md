@@ -1,71 +1,77 @@
 # EDUvian
 
-A modern Flutter application designed with a beautiful user interface and built using a robust tech stack.
+EDUvian is a comprehensive Flutter-based mobile application designed for students to manage their academic life efficiently. It offers tools for calculating grades, managing class routines, and staying updated with real-time notifications, all within a sleek and responsive user interface.
 
 ## 🚀 Features
 
-- **Authentication**: Secure login and signup via Firebase Auth and Google Sign-In.
-- **Database**: Real-time data sync using Cloud Firestore.
-- **Push Notifications**: Integrated Firebase Cloud Messaging (FCM) and local notifications.
-- **State Management**: Reactive and robust state management powered by Riverpod.
-- **Routing**: Deep linking and declarative routing with GoRouter.
-- **Theming**: Dynamic Light and Dark modes with a custom color scheme (Maroon/Red seed color) using Google Fonts (Inter).
-- **Animations**: Smooth micro-animations using Flutter Animate.
+- **Authentication**: Secure Login and Sign-up system powered by Firebase Authentication (including Google Sign-In).
+- **Dashboard**: A central hub providing a quick overview of academic progress, upcoming routines, and important messages.
+- **Academic Calculators**: 
+  - **GPA Calculator**: Easily calculate your Grade Point Average for the current semester.
+  - **CGPA Calculator**: Track your Cumulative Grade Point Average across multiple semesters.
+  - **Credit Tracking**: Keep track of completed credits.
+- **Routine Management**: View and manage daily class schedules and routines.
+- **Push Notifications**: Real-time announcements and messages using Firebase Cloud Messaging (FCM).
+- **Settings & Profile**: Customizable user settings for a personalized experience.
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Architecture
 
-- **Framework**: [Flutter](https://flutter.dev/) (SDK ^3.7.2)
-- **State Management**: [Riverpod](https://riverpod.dev/) (`flutter_riverpod`)
-- **Routing**: [GoRouter](https://pub.dev/packages/go_router)
-- **Backend Services**: [Firebase](https://firebase.google.com/)
-  - Firebase Core
-  - Firebase Auth
-  - Cloud Firestore
-  - Firebase Messaging
-- **UI/UX**:
-  - `google_fonts`
-  - `flutter_animate`
-  - `cupertino_icons`
+- **Framework**: [Flutter](https://flutter.dev/) (Dart)
+- **State Management**: [Riverpod](https://riverpod.dev/) for robust and scalable state handling.
+- **Routing**: [GoRouter](https://pub.dev/packages/go_router) for declarative routing.
+- **Backend & Cloud**:
+  - **Firebase Authentication**: User identity and secure access.
+  - **Cloud Firestore**: Real-time NoSQL database for storing routines, messages, and user data.
+  - **Firebase Cloud Messaging**: Sending and receiving push notifications.
+- **Local Storage**: `shared_preferences` for caching local user settings.
+- **UI & Animations**: `google_fonts` for typography and `flutter_animate` for smooth micro-animations.
 
-## 📦 Getting Started
+## 📁 Project Structure
+
+```text
+lib/
+├── core/         # Core utilities, constants, and themes
+├── model/        # Data models for the application
+├── screen/       # UI Screens (Login, Dashboard, Routine, GPA/CGPA, Settings)
+├── ui/           # Reusable custom UI components and widgets
+├── main.dart     # Application entry point
+└── firebase_options.dart # Firebase configuration
+```
+
+## ⚙️ Getting Started
 
 ### Prerequisites
 
-- Flutter SDK (version ^3.7.2)
-- Android Studio / VS Code
-- A Firebase project with Auth and Firestore enabled
+- Flutter SDK (v3.7.2 or higher)
+- Dart SDK
+- Android Studio / Xcode for running emulators
+- A Firebase Project (with Auth, Firestore, and Cloud Messaging enabled)
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/monabbor-hossen/EDUvian.git
    cd EDUvian
    ```
 
-2. **Install dependencies**
+2. **Install dependencies:**
    ```bash
    flutter pub get
    ```
 
-3. **Firebase Configuration**
-   - Configure Firebase for this project using the [FlutterFire CLI](https://firebase.flutter.dev/docs/cli/).
-   - Ensure you have the `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) in their respective directories.
+3. **Configure Firebase:**
+   Make sure you have your `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) configured correctly if you are setting up your own Firebase environment.
 
-4. **Run the App**
+4. **Run the app:**
    ```bash
    flutter run
    ```
 
-## 🏗️ Project Structure
+## 🤝 Contributing
 
-- `lib/core/` - Core services like NotificationService.
-- `lib/model/` - Data models and router configurations.
-- `lib/main.dart` - Application entry point, initializing Firebase, Notifications, and configuring the app theme.
-
-## 🎨 Design
-
-The app uses `ThemeMode.system` by default to adapt to your device's preferences. It defines a custom `ColorScheme` seeded from `rgb(107, 0, 50)`.
+Contributions, issues, and feature requests are welcome! 
+Feel free to check the issues page if you want to contribute.
 
 ## 📄 License
 
