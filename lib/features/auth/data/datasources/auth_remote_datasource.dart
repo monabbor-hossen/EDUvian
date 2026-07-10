@@ -29,16 +29,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserCredential> signInWithEmail(String email, String password) {
+    final trimmedEmail = email.trim();
+    if (!trimmedEmail.toLowerCase().endsWith('@eastdelta.edu.bd')) {
+      throw Exception('Only @eastdelta.edu.bd emails are allowed.');
+    }
     return _auth.signInWithEmailAndPassword(
-      email: email.trim(),
+      email: trimmedEmail,
       password: password,
     );
   }
 
   @override
   Future<UserCredential> signUpWithEmail(String email, String password) {
+    final trimmedEmail = email.trim();
+    if (!trimmedEmail.toLowerCase().endsWith('@eastdelta.edu.bd')) {
+      throw Exception('Only @eastdelta.edu.bd emails are allowed.');
+    }
     return _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
+      email: trimmedEmail,
       password: password,
     );
   }
@@ -47,6 +55,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<UserCredential?> signInWithGoogle() async {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser == null) return null;
+
+    if (!googleUser.email.toLowerCase().endsWith('@eastdelta.edu.bd')) {
+      await _googleSignIn.signOut();
+      throw Exception('Only @eastdelta.edu.bd emails are allowed.');
+    }
 
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
     final credential = GoogleAuthProvider.credential(

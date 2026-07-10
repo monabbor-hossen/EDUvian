@@ -187,8 +187,15 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     return _db
         .collection('chats')
         .where('memberIds', arrayContains: user.uid)
-        .orderBy('lastTimestamp', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(ChatGroupModel.fromFirestore).toList());
+        .map((snap) {
+          final list = snap.docs.map(ChatGroupModel.fromFirestore).toList();
+          list.sort((a, b) {
+            final t1 = a.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final t2 = b.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return t2.compareTo(t1);
+          });
+          return list;
+        });
   }
 }
