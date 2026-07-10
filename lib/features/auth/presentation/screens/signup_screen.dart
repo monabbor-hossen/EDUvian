@@ -10,13 +10,13 @@ import '../../../../core/widgets/app_background.dart';
 import '../providers/auth_providers.dart';
 
 // ─── Local State Providers ────────────────────────────────────────────────────
-final _signupEmailProvider = StateProvider<String>((ref) => '');
-final _signupPasswordProvider = StateProvider<String>((ref) => '');
-final _signupConfirmPasswordProvider = StateProvider<String>((ref) => '');
-final _signupPasswordVisibleProvider = StateProvider<bool>((ref) => false);
-final _signupConfirmVisibleProvider = StateProvider<bool>((ref) => false);
-final _signupLoadingProvider = StateProvider<bool>((ref) => false);
-final _signupErrorProvider = StateProvider<String?>((ref) => null);
+final _signupEmailProvider = StateProvider.autoDispose<String>((ref) => '');
+final _signupPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
+final _signupConfirmPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
+final _signupPasswordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _signupConfirmVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _signupLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _signupErrorProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 // ─── Signup Screen ────────────────────────────────────────────────────────────
 class SignupScreen extends ConsumerWidget {
@@ -65,11 +65,11 @@ class SignupScreen extends ConsumerWidget {
 
       try {
         final result = await ref.read(authServiceProvider).signUpWithEmail(email, pass);
-        // Brand-new email signup — clear any stale academic_info so the
-        // onboarding dialog will show when MainLayoutScreen mounts.
+        // Clear any stale academic_info so the onboarding dialog will show
+        // or properly fetch from Firestore when MainLayoutScreen mounts.
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('academic_info');
-        checkedUids.remove(result.user?.uid);
+        checkedUids.clear();
         if (context.mounted) context.go('/');
       } on FirebaseAuthException catch (e) {
         ref.read(_signupErrorProvider.notifier).state =
@@ -78,7 +78,9 @@ class SignupScreen extends ConsumerWidget {
         ref.read(_signupErrorProvider.notifier).state =
             e.toString().replaceAll('Exception: ', '');
       } finally {
-        ref.read(_signupLoadingProvider.notifier).state = false;
+        if (context.mounted) {
+          ref.read(_signupLoadingProvider.notifier).state = false;
+        }
       }
     }
 

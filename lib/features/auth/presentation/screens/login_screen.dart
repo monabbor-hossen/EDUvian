@@ -10,11 +10,11 @@ import '../../../../core/widgets/app_background.dart';
 import '../providers/auth_providers.dart';
 
 // ─── Local State Providers ────────────────────────────────────────────────────
-final _loginEmailProvider = StateProvider<String>((ref) => '');
-final _loginPasswordProvider = StateProvider<String>((ref) => '');
-final _passwordVisibleProvider = StateProvider<bool>((ref) => false);
-final _isLoadingProvider = StateProvider<bool>((ref) => false);
-final _loginErrorProvider = StateProvider<String?>((ref) => null);
+final _loginEmailProvider = StateProvider.autoDispose<String>((ref) => '');
+final _loginPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
+final _passwordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _loginErrorProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 class LoginScreen extends ConsumerWidget {
@@ -46,7 +46,12 @@ class LoginScreen extends ConsumerWidget {
       ref.read(_loginErrorProvider.notifier).state = null;
 
       try {
-        await ref.read(authServiceProvider).signInWithEmail(email, pass);
+        final result = await ref.read(authServiceProvider).signInWithEmail(email, pass);
+        // Clear old session cache so MainLayout fetches fresh data from Firestore
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('academic_info');
+        checkedUids.clear();
+        
         if (context.mounted) context.go('/');
       } on FirebaseAuthException catch (e) {
         ref.read(_loginErrorProvider.notifier).state =
@@ -55,7 +60,9 @@ class LoginScreen extends ConsumerWidget {
         ref.read(_loginErrorProvider.notifier).state =
             e.toString().replaceAll('Exception: ', '');
       } finally {
-        ref.read(_isLoadingProvider.notifier).state = false;
+        if (context.mounted) {
+          ref.read(_isLoadingProvider.notifier).state = false;
+        }
       }
     }
 
@@ -66,15 +73,11 @@ class LoginScreen extends ConsumerWidget {
         final result =
             await ref.read(authServiceProvider).signInWithGoogle();
         if (result != null && context.mounted) {
-          // If this is a brand-new Google account, clear any stale academic_info
-          // so the onboarding dialog always shows for new users.
-          final isNew = result.additionalUserInfo?.isNewUser ?? false;
-          if (isNew) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.remove('academic_info');
-            // Also remove from the session cache so MainLayoutScreen will check again.
-            checkedUids.remove(result.user?.uid);
-          }
+          // Clear old session cache so MainLayout fetches fresh data from Firestore
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('academic_info');
+          checkedUids.clear();
+
           if (context.mounted) context.go('/');
         }
       } on FirebaseAuthException catch (e) {
@@ -84,7 +87,9 @@ class LoginScreen extends ConsumerWidget {
         ref.read(_loginErrorProvider.notifier).state =
             e.toString().replaceAll('Exception: ', '');
       } finally {
-        ref.read(_isLoadingProvider.notifier).state = false;
+        if (context.mounted) {
+          ref.read(_isLoadingProvider.notifier).state = false;
+        }
       }
     }
 
@@ -229,7 +234,7 @@ class LoginScreen extends ConsumerWidget {
                     // ── Email Field ───────────────────────────────────────────
                     _AuthTextField(
                       controller: emailCtrl,
-                      hintText: 'student@university.edu',
+                      hintText: 'student@eastdelta.edu.bd',
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (v) =>
                           ref.read(_loginEmailProvider.notifier).state = v,

@@ -79,7 +79,13 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
 
     final authAsync = ref.watch(authStateProvider);
     authAsync.whenData((user) {
-      if (user != null) _scheduleDialogIfNeeded(user.uid);
+      if (user != null) {
+        _scheduleDialogIfNeeded(user.uid);
+      } else {
+        // Reset state on logout so it triggers again on next login
+        _dialogPending = false;
+        checkedUids.clear();
+      }
     });
 
     final navVisible = ref.watch(navBarVisibleProvider);
