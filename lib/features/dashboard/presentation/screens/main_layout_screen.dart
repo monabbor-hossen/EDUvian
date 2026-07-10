@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,26 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
       checkedUids.add(uid);
 
       final prefs = await SharedPreferences.getInstance();
-      final info = prefs.getString('academic_info') ?? '';
+      var info = prefs.getString('academic_info') ?? '';
+
+      // If not found locally, check Firestore (handles reinstalls / new devices)
+      if (info.isEmpty) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          final cloudInfo = doc.data()?['academic_info'] as String? ?? '';
+          if (cloudInfo.isNotEmpty) {
+            // Restore to local cache so future launches skip the cloud call
+            await prefs.setString('academic_info', cloudInfo);
+            info = cloudInfo;
+          }
+        } catch (_) {
+          // Network error — fall through and show the dialog
+        }
+      }
+
       if (info.isEmpty && mounted) {
         await showAcademicInfoSetupDialog(context);
         if (mounted) ref.invalidate(academicInfoProvider);

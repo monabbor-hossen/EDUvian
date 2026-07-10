@@ -51,6 +51,9 @@ class LoginScreen extends ConsumerWidget {
       } on FirebaseAuthException catch (e) {
         ref.read(_loginErrorProvider.notifier).state =
             e.message ?? 'Login failed. Please try again.';
+      } catch (e) {
+        ref.read(_loginErrorProvider.notifier).state =
+            e.toString().replaceAll('Exception: ', '');
       } finally {
         ref.read(_isLoadingProvider.notifier).state = false;
       }
@@ -77,9 +80,9 @@ class LoginScreen extends ConsumerWidget {
       } on FirebaseAuthException catch (e) {
         ref.read(_loginErrorProvider.notifier).state =
             e.message ?? 'Google sign-in failed.';
-      } catch (_) {
+      } catch (e) {
         ref.read(_loginErrorProvider.notifier).state =
-            'Google sign-in failed. Please try again.';
+            e.toString().replaceAll('Exception: ', '');
       } finally {
         ref.read(_isLoadingProvider.notifier).state = false;
       }

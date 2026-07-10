@@ -74,6 +74,9 @@ class SignupScreen extends ConsumerWidget {
       } on FirebaseAuthException catch (e) {
         ref.read(_signupErrorProvider.notifier).state =
             e.message ?? 'Registration failed.';
+      } catch (e) {
+        ref.read(_signupErrorProvider.notifier).state =
+            e.toString().replaceAll('Exception: ', '');
       } finally {
         ref.read(_signupLoadingProvider.notifier).state = false;
       }

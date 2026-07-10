@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,6 +74,19 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('academic_info', raw);
     
+    // Also persist to Firestore so reinstalls / new devices skip the popup
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .set({'academic_info': raw}, SetOptions(merge: true));
+      } catch (_) {
+        // Non-blocking — local save already succeeded
+      }
+    }
+
     // Subscribe to new topic for notifications (fire-and-forget to avoid blocking UI)
     NotificationService().subscribeToBatchTopic(raw);
     
