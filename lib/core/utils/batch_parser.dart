@@ -26,6 +26,14 @@ class BatchParser {
     required String email,
     required String batchString,
   }) {
+    // 0. Validate that this is a university email
+    if (!email.toLowerCase().trim().endsWith('@eastdelta.edu.bd')) {
+      throw FormatException(
+        'Only East Delta University emails (@eastdelta.edu.bd) are supported. '
+        'Please use your university email address.',
+      );
+    }
+
     // 1. Determine shift & department from email
     final localPart = email.split('@').first.trim().toLowerCase();
     

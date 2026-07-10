@@ -1123,9 +1123,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             if (messages.isEmpty) {
               return _EmptyChat(dark: dark);
             }
-            // Auto-scroll when new messages arrive
-            WidgetsBinding.instance
-                .addPostFrameCallback((_) => _scrollToBottom());
+            // Auto-scroll only when the user is already near the bottom
+            // so we don't hijack their scroll while they're reading history
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollCtrl.hasClients) {
+                final pos = _scrollCtrl.position;
+                final nearBottom = pos.maxScrollExtent - pos.pixels < 200;
+                if (nearBottom) _scrollToBottom();
+              }
+            });
 
             return ListView.builder(
               controller: _scrollCtrl,
