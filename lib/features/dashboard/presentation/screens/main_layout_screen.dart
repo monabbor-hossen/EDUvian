@@ -52,6 +52,9 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
             // Restore to local cache so future launches skip the cloud call
             await prefs.setString('academic_info', cloudInfo);
             info = cloudInfo;
+            if (mounted) {
+              ref.invalidate(academicInfoProvider);
+            }
           }
         } catch (_) {
           // Network error — fall through and show the dialog

@@ -79,6 +79,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final user = authState.asData?.value;
     final isLoggedIn = user != null;
 
+    ref.listen<AsyncValue<String>>(academicInfoProvider, (previous, next) {
+      final newInfo = next.valueOrNull;
+      if (newInfo != null && newInfo != _academicInfo) {
+        setState(() {
+          _academicInfo = newInfo;
+          if (!_isEditingName) {
+            _academicController.text = newInfo;
+          }
+        });
+      }
+    });
+
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
