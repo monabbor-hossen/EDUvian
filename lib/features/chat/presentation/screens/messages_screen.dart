@@ -142,14 +142,6 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _buildAppBar(context),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.only(bottom: 90.0), // Above the nav bar
-          child: FloatingActionButton(
-            onPressed: () => context.push('/messages/create-group-members'),
-            backgroundColor: const Color(0xFF3B82F6),
-            child: const Icon(Icons.add, color: Colors.white),
-          ),
-        ),
         body: sectionAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
@@ -226,21 +218,24 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : primaryColor.withValues(alpha: 0.08),
-              border: Border.all(
+          child: GestureDetector(
+            onTap: () => context.push('/messages/create-group-members'),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: dark
-                    ? Colors.white.withValues(alpha: 0.15)
-                    : primaryColor.withValues(alpha: 0.2),
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : primaryColor.withValues(alpha: 0.08),
+                border: Border.all(
+                  color: dark
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : primaryColor.withValues(alpha: 0.2),
+                ),
               ),
+              child: Icon(Icons.edit_rounded, size: 18, color: textColor),
             ),
-            child: Icon(Icons.edit_rounded, size: 18, color: textColor),
           ),
         ),
       ],
@@ -853,7 +848,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   @override
   void dispose() {
     // Restore bottom nav bar when leaving the chat room
-    ref.read(navBarVisibleProvider.notifier).state = true;
+    Future.microtask(() {
+      try {
+        ref.read(navBarVisibleProvider.notifier).state = true;
+      } catch (_) {}
+    });
     _msgCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
@@ -887,8 +886,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.sectionId));
     final currentUid = _chatService.currentUid;
 
-    return AppBackground(
-      bottomSafe: false,
+    return WillPopScope(
+      onWillPop: () async {
+        ref.read(navBarVisibleProvider.notifier).state = true;
+        return true;
+      },
+      child: AppBackground(
+        bottomSafe: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         resizeToAvoidBottomInset: true,
@@ -912,7 +916,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                 surfaceTintColor: Colors.transparent,
                 leading: IconButton(
                   icon: Icon(Icons.arrow_back_ios_new_rounded, color: textColor, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                    ref.read(navBarVisibleProvider.notifier).state = true;
+                    Navigator.of(context).pop();
+                  },
                 ),
                 title: Row(
                   children: [
@@ -1051,7 +1058,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           },
         ),
       ),
-    );
+    ));
   }
 
   void _showMembersSheet(
