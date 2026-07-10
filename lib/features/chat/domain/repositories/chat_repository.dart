@@ -13,4 +13,8 @@ abstract class ChatRepository {
   Stream<List<ChatMessage>> streamMessages(String sectionId);
   Stream<List<Map<String, dynamic>>> streamMembers(String sectionId);
   Stream<List<ChatGroup>> streamUserChats();
+
+  Future<void> muteGroup(String groupId, bool mute);
+  Future<void> leaveGroup(String groupId);
+  Future<void> deleteGroup(String groupId);
 }

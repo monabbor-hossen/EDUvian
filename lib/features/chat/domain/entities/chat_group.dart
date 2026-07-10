@@ -6,6 +6,7 @@ class ChatGroup {
   final String lastMessage;
   final String lastSenderName;
   final DateTime? lastTimestamp;
+  final List<String> mutedBy;
 
   const ChatGroup({
     required this.id,
@@ -15,5 +16,6 @@ class ChatGroup {
     required this.lastMessage,
     required this.lastSenderName,
     this.lastTimestamp,
+    this.mutedBy = const [],
   });
 }

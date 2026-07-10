@@ -49,4 +49,19 @@ class ChatRepositoryImpl implements ChatRepository {
   Stream<List<ChatGroup>> streamUserChats() {
     return _remoteDataSource.streamUserChats().map((list) => list.cast<ChatGroup>());
   }
+
+  @override
+  Future<void> muteGroup(String groupId, bool mute) {
+    return _remoteDataSource.muteGroup(groupId, mute);
+  }
+
+  @override
+  Future<void> leaveGroup(String groupId) {
+    return _remoteDataSource.leaveGroup(groupId);
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) {
+    return _remoteDataSource.deleteGroup(groupId);
+  }
 }

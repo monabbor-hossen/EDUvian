@@ -16,6 +16,10 @@ abstract class ChatRemoteDataSource {
   Stream<List<ChatMessageModel>> streamMessages(String sectionId);
   Stream<List<Map<String, dynamic>>> streamMembers(String sectionId);
   Stream<List<ChatGroupModel>> streamUserChats();
+
+  Future<void> muteGroup(String groupId, bool mute);
+  Future<void> leaveGroup(String groupId);
+  Future<void> deleteGroup(String groupId);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -154,9 +158,40 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       });
     }
     await batch.commit();
-
     return docRef.id;
   }
+
+  @override
+  Future<void> muteGroup(String groupId, bool mute) async {
+    final user = _user;
+    if (user == null) return;
+    
+    await _db.collection('chats').doc(groupId).update({
+      'mutedBy': mute
+          ? FieldValue.arrayUnion([user.uid])
+          : FieldValue.arrayRemove([user.uid]),
+    });
+  }
+
+  @override
+  Future<void> leaveGroup(String groupId) async {
+    final user = _user;
+    if (user == null) return;
+
+    await _db.collection('chats').doc(groupId).update({
+      'memberIds': FieldValue.arrayRemove([user.uid]),
+    });
+    
+    await _db.collection('chats').doc(groupId).collection('members').doc(user.uid).delete();
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    // Note: For a robust implementation, a Cloud Function should delete subcollections.
+    // For now, we delete the main document so it disappears from the list.
+    await _db.collection('chats').doc(groupId).delete();
+  }
+
 
   @override
   Stream<List<ChatMessageModel>> streamMessages(String sectionId) {

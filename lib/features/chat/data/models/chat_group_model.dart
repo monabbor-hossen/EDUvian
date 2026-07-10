@@ -11,6 +11,7 @@ class ChatGroupModel extends ChatGroup {
     required super.lastMessage,
     required super.lastSenderName,
     super.lastTimestamp,
+    super.mutedBy = const [],
   });
 
   factory ChatGroupModel.fromFirestore(DocumentSnapshot doc) {
@@ -23,6 +24,7 @@ class ChatGroupModel extends ChatGroup {
       lastMessage: data['lastMessage'] as String? ?? '',
       lastSenderName: data['lastSenderName'] as String? ?? '',
       lastTimestamp: (data['lastTimestamp'] as Timestamp?)?.toDate(),
+      mutedBy: List<String>.from(data['mutedBy'] ?? []),
     );
   }
 }

@@ -144,15 +144,11 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
         appBar: _buildAppBar(context),
         body: sectionAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
-            child: Text('Error: $e', style: GoogleFonts.inter(color: Colors.red)),
-          ),
+          error: (e, _) => _NoSectionView(dark: widget.dark),
           data: (sectionId) {
             return userChatsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text('Error: $e', style: GoogleFonts.inter(color: Colors.red)),
-              ),
+              error: (e, _) => _NoSectionView(dark: widget.dark),
               data: (userChats) {
                 // Ensure sectionId chat is always visible even if not yet fully registered
                 List<ChatGroup> allChats = List.from(userChats);
@@ -338,11 +334,12 @@ class _AllChatsListState extends State<_AllChatsList> {
                         : chat.lastMessage),
                 timestamp: chat.lastTimestamp,
                 dark: dark,
+                isMuted: currentUid != null && chat.mutedBy.contains(currentUid),
                 onTap: () {
                   context.push('/messages/room/${chat.id}');
                 },
                 onDelete: () => setState(() => _removedChats.add(chat.id)),
-                onInfo: () => _showMembersSheet(context, chat.id, dark),
+                onInfo: () => _showOptionsSheet(context, chat, currentUid ?? '', dark),
               );
             },
           ),
@@ -351,14 +348,14 @@ class _AllChatsListState extends State<_AllChatsList> {
     );
   }
 
-  void _showMembersSheet(
-      BuildContext context, String sectionId, bool dark) {
+  void _showOptionsSheet(BuildContext context, ChatGroup chat, String currentUid, bool dark) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _MembersBottomSheet(
-        sectionId: sectionId,
+      builder: (_) => _ChatOptionsSheet(
+        chat: chat,
+        currentUid: currentUid,
         dark: dark,
       ),
     );
@@ -372,6 +369,7 @@ class _ChatTile extends StatefulWidget {
   final String lastMessage;
   final DateTime? timestamp;
   final bool dark;
+  final bool isMuted;
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback onInfo;
@@ -382,6 +380,7 @@ class _ChatTile extends StatefulWidget {
     required this.lastMessage,
     required this.timestamp,
     required this.dark,
+    required this.isMuted,
     required this.onTap,
     required this.onDelete,
     required this.onInfo,
@@ -395,6 +394,15 @@ class _ChatTileState extends State<_ChatTile> {
   double _swipeOffset = 0;
   bool _swiping = false;
   static const _revealThreshold = 80.0;
+
+  @override
+  void didUpdateWidget(covariant _ChatTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Close any open swipe when the list refreshes (e.g. Firestore update / hot reload)
+    if (_swipeOffset != 0) {
+      setState(() => _swipeOffset = 0);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -430,32 +438,33 @@ class _ChatTileState extends State<_ChatTile> {
       child: Stack(
         alignment: Alignment.centerRight,
         children: [
-          // Swipe background actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _RevealButton(
-                icon: Icons.info_outline_rounded,
-                color: const Color(0xFF6B0032).withValues(alpha: 0.15),
-                iconColor: const Color(0xFF6B0032),
-                onTap: () {
-                  setState(() => _swipeOffset = 0);
-                  widget.onInfo();
-                },
-              ),
-              _RevealButton(
-                icon: Icons.delete_outline_rounded,
-                color: Colors.red.withValues(alpha: 0.15),
-                iconColor: Colors.red,
-                onTap: () {
-                  setState(() => _swipeOffset = 0);
-                  widget.onDelete();
-                },
-              ),
-            ],
-          ),
+          // Swipe background actions — only visible when swiped open
+          if (_swipeOffset < 0)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _RevealButton(
+                  icon: Icons.more_horiz_rounded,
+                  color: Colors.grey.withValues(alpha: 0.15),
+                  iconColor: Colors.black,
+                  onTap: () {
+                    setState(() => _swipeOffset = 0);
+                    widget.onInfo();
+                  },
+                ),
+                _RevealButton(
+                  icon: Icons.delete_outline_rounded,
+                  color: Colors.red.withValues(alpha: 0.85),
+                  iconColor: Colors.white,
+                  onTap: () {
+                    setState(() => _swipeOffset = 0);
+                    widget.onDelete();
+                  },
+                ),
+              ],
+            ),
 
-          // Main tile
+          // Main tile slides over the buttons
           AnimatedSlide(
             offset: Offset(_swipeOffset / MediaQuery.of(context).size.width, 0),
             duration: _swiping ? Duration.zero : 200.ms,
@@ -570,7 +579,7 @@ class _ChatTileState extends State<_ChatTile> {
                     ),
                     const SizedBox(width: 8),
 
-                    // Time + unread
+                    // Time + unread + mute icon
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -583,13 +592,26 @@ class _ChatTileState extends State<_ChatTile> {
                             ),
                           ),
                         const SizedBox(height: 6),
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: primaryColor,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.isMuted) ...[
+                              Icon(
+                                Icons.notifications_off_rounded,
+                                size: 14,
+                                color: dark ? Colors.white30 : Colors.black38,
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -635,18 +657,56 @@ class _RevealButton extends StatelessWidget {
 
 // ─── Members Bottom Sheet ──────────────────────────────────────────────────────
 
-class _MembersBottomSheet extends ConsumerWidget {
-  final String sectionId;
+class _ChatOptionsSheet extends ConsumerStatefulWidget {
+  final ChatGroup chat;
+  final String currentUid;
   final bool dark;
 
-  const _MembersBottomSheet({
-    required this.sectionId,
+  const _ChatOptionsSheet({
+    required this.chat,
+    required this.currentUid,
     required this.dark,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final membersAsync = ref.watch(chatMembersProvider(sectionId));
+  ConsumerState<_ChatOptionsSheet> createState() => _ChatOptionsSheetState();
+}
+
+class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
+  bool _isProcessing = false;
+
+  void _mute(bool mute) async {
+    setState(() => _isProcessing = true);
+    await ref.read(chatRepositoryProvider).muteGroup(widget.chat.id, mute);
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _leave() async {
+    setState(() => _isProcessing = true);
+    await ref.read(chatRepositoryProvider).leaveGroup(widget.chat.id);
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _delete() async {
+    setState(() => _isProcessing = true);
+    await ref.read(chatRepositoryProvider).deleteGroup(widget.chat.id);
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = widget.dark;
+    final membersAsync = ref.watch(chatMembersProvider(widget.chat.id));
+    final isMuted = widget.chat.mutedBy.contains(widget.currentUid);
 
     return GlassContainer(
       blur: 24,
@@ -670,81 +730,73 @@ class _MembersBottomSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Chat Members',
+            widget.chat.name,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: dark ? Colors.white : Colors.black87,
             ),
           ),
-          const SizedBox(height: 12),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 320),
-            child: membersAsync.when(
-              loading: () => const Center(
-                  child: Padding(
-                padding: EdgeInsets.all(24.0),
-                child: CircularProgressIndicator(),
-              )),
-              error: (e, _) => Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text('Error: $e',
-                    style: GoogleFonts.inter(color: Colors.red)),
+          const SizedBox(height: 4),
+          membersAsync.when(
+            loading: () => const Center(child: SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (_) => Text(
+              '${widget.chat.memberIds.length} Members',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: dark ? Colors.white54 : Colors.black54,
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Horizontal members list
+          SizedBox(
+            height: 80,
+            child: membersAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error', style: GoogleFonts.inter(color: Colors.red))),
               data: (members) {
-                if (members.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Text('No members found.',
-                        style: GoogleFonts.inter(
-                            color: dark ? Colors.white38 : Colors.black38)),
-                  );
-                }
+                // Filter against the authoritative memberIds to exclude stale subcollection docs
+                final validMembers = members
+                    .where((m) => widget.chat.memberIds.contains(m['uid'] as String? ?? ''))
+                    .toList();
                 return ListView.builder(
-                  shrinkWrap: true,
+                  scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
-                  itemCount: members.length,
+                  itemCount: validMembers.length,
                   itemBuilder: (context, index) {
-                    final m = members[index];
+                    final m = validMembers[index];
                     final name = m['name'] as String? ?? 'Unknown';
-                    final email = m['email'] as String? ?? '';
                     final uid = m['uid'] as String? ?? '';
+                    final parts = name.split(' ');
+                    final shortName = parts.isNotEmpty ? parts[0] : name;
 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           CircleAvatar(
-                            radius: 18,
+                            radius: 24,
                             backgroundColor: _avatarColor(uid),
                             child: Text(
                               name.isNotEmpty ? name[0].toUpperCase() : '?',
                               style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 14),
+                                  fontSize: 16),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(name,
-                                    style: GoogleFonts.inter(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                        color: dark
-                                            ? Colors.white
-                                            : Colors.black87)),
-                                const SizedBox(height: 1),
-                                Text(email,
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: dark
-                                            ? Colors.white54
-                                            : Colors.black54)),
-                              ],
+                          const SizedBox(height: 6),
+                          Text(
+                            shortName,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: dark ? Colors.white70 : Colors.black87,
                             ),
                           ),
                         ],
@@ -755,6 +807,51 @@ class _MembersBottomSheet extends ConsumerWidget {
               },
             ),
           ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
+
+          // Action: Mute
+          ListTile(
+            onTap: _isProcessing ? null : () => _mute(!isMuted),
+            leading: Icon(
+              isMuted ? Icons.notifications_off_outlined : Icons.notifications_active_outlined,
+              color: dark ? Colors.white70 : Colors.black87,
+            ),
+            title: Text(
+              isMuted ? 'Unmute Group' : 'Mute Group',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: dark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ),
+
+          // Only allow leave/delete for custom groups OR just leave for everyone
+          if (widget.chat.type == 'custom') ...[
+            ListTile(
+              onTap: _isProcessing ? null : _leave,
+              leading: const Icon(Icons.exit_to_app_rounded, color: Colors.orange),
+              title: Text(
+                'Leave Group',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+            ListTile(
+              onTap: _isProcessing ? null : _delete,
+              leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
+              title: Text(
+                'Delete Group',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1062,13 +1159,28 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   }
 
   void _showMembersSheet(
-      BuildContext context, String sectionId, bool dark) {
+      BuildContext context, String sectionId, bool dark) async {
+    // Fetch live data to build a ChatGroup for the options sheet
+    final doc = await FirebaseFirestore.instance.collection('chats').doc(sectionId).get();
+    final data = doc.exists ? doc.data() as Map<String, dynamic> : <String, dynamic>{};
+    final chatGroup = ChatGroup(
+      id: sectionId,
+      name: data['name'] as String? ?? data['sectionId'] as String? ?? sectionId,
+      type: data['type'] as String? ?? 'section',
+      memberIds: List<String>.from(data['memberIds'] ?? []),
+      lastMessage: '',
+      lastSenderName: '',
+      mutedBy: List<String>.from(data['mutedBy'] ?? []),
+    );
+    final currentUid = _chatService.currentUid ?? '';
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => _MembersBottomSheet(
-        sectionId: sectionId,
+      builder: (_) => _ChatOptionsSheet(
+        chat: chatGroup,
+        currentUid: currentUid,
         dark: dark,
       ),
     );
