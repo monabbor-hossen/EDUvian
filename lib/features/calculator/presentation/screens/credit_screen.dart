@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -9,6 +10,7 @@ import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/rounded_field.dart';
 import '../../../../core/widgets/dropdown_field.dart';
 import '../../../../core/widgets/subject_autocomplete.dart';
+import '../../../../core/models/academic_info.dart';
 import '../../domain/entities/subject.dart';
 import '../providers/calculator_providers.dart';
 
@@ -22,6 +24,38 @@ class CreditCalculation extends ConsumerStatefulWidget {
 }
 
 class _CreditCalculationState extends ConsumerState<CreditCalculation> {
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaults();
+  }
+
+  String _getSemesterString(int sem) {
+    if (sem == 1) return '1st Semester';
+    if (sem == 2) return '2nd Semester';
+    if (sem == 3) return '3rd Semester';
+    return '${sem}th Semester';
+  }
+
+  Future<void> _loadDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    final infoString = prefs.getString('academic_info') ?? '';
+    if (infoString.isNotEmpty) {
+      final info = parseAcademicInfo(infoString);
+      if (info != null) {
+        if (ref.read(departmentProvider) == null && department.containsKey(info.department)) {
+          ref.read(departmentProvider.notifier).state = info.department;
+        }
+        if (ref.read(semesterProvider) == null) {
+          final semStr = _getSemesterString(info.semester);
+          if (semester.contains(semStr)) {
+            ref.read(semesterProvider.notifier).state = semStr;
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBackground(

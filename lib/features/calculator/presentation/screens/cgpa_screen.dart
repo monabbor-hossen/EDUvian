@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/rounded_field.dart';
 import '../../../../core/widgets/dropdown_field.dart';
+import '../../../../core/widgets/subject_autocomplete.dart';
 import '../../../../core/widgets/arrow_tooltip.dart';
+import '../../../../core/models/academic_info.dart';
 import '../../domain/entities/subject.dart';
 import '../providers/calculator_providers.dart';
 
@@ -29,6 +32,25 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
   void showTooltip(GlobalKey<ArrowTooltipState> key) {
     final dynamic tooltip = key.currentState;
     tooltip?.ensureTooltipVisible();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDefaults();
+  }
+
+  Future<void> _loadDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    final infoString = prefs.getString('academic_info') ?? '';
+    if (infoString.isNotEmpty) {
+      final info = parseAcademicInfo(infoString);
+      if (info != null && ref.read(departmentProvider) == null) {
+        if (department.containsKey(info.department)) {
+          ref.read(departmentProvider.notifier).state = info.department;
+        }
+      }
+    }
   }
 
   @override
