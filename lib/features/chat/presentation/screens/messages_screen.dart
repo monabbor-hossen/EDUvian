@@ -1025,10 +1025,25 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               final type = data['type'] as String? ?? 'section';
               final rawChatName = data['name'] as String? ?? data['sectionId'] as String? ?? widget.sectionId;
               String chatName = rawChatName;
-              if (chatName.startsWith('E') && chatName.length > 1 && RegExp(r'^\d').hasMatch(chatName.substring(1))) {
-                chatName = chatName.substring(1);
-              }
               final memberIds = List<String>.from(data['memberIds'] ?? []);
+              
+              if (type == 'section' && chatName.startsWith('E') && chatName.length > 1 && RegExp(r'^\d').hasMatch(chatName.substring(1))) {
+                chatName = chatName.substring(1);
+              } else if (type == 'direct') {
+                final names = data['names'] as Map<String, dynamic>?;
+                final currentUid = _chatService.currentUid;
+                final otherUid = memberIds.firstWhere((id) => id != currentUid, orElse: () => '');
+                if (names != null && otherUid.isNotEmpty) {
+                  chatName = names[otherUid] as String? ?? chatName;
+                } else if (chatName.contains(' & ')) {
+                  final parts = chatName.split(' & ');
+                  final currentName = _chatService.currentDisplayName;
+                  if (parts.contains(currentName)) {
+                    parts.remove(currentName);
+                    chatName = parts.join(' & ');
+                  }
+                }
+              }
               final numMembers = memberIds.isNotEmpty ? memberIds.length : 1;
               
               final textColor = dark ? Colors.white : primaryColor;
@@ -1197,11 +1212,33 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     // Fetch live data to build a ChatGroup for the options sheet
     final doc = await FirebaseFirestore.instance.collection('chats').doc(sectionId).get();
     final data = doc.exists ? doc.data() as Map<String, dynamic> : <String, dynamic>{};
+    final type = data['type'] as String? ?? 'section';
+    final memberIds = List<String>.from(data['memberIds'] ?? []);
+    String resolvedName = data['name'] as String? ?? data['sectionId'] as String? ?? sectionId;
+
+    if (type == 'section' && resolvedName.startsWith('E') && resolvedName.length > 1 && RegExp(r'^\d').hasMatch(resolvedName.substring(1))) {
+      resolvedName = resolvedName.substring(1);
+    } else if (type == 'direct') {
+      final names = data['names'] as Map<String, dynamic>?;
+      final currentUid = _chatService.currentUid;
+      final otherUid = memberIds.firstWhere((id) => id != currentUid, orElse: () => '');
+      if (names != null && otherUid.isNotEmpty) {
+        resolvedName = names[otherUid] as String? ?? resolvedName;
+      } else if (resolvedName.contains(' & ')) {
+        final parts = resolvedName.split(' & ');
+        final currentName = _chatService.currentDisplayName;
+        if (parts.contains(currentName)) {
+          parts.remove(currentName);
+          resolvedName = parts.join(' & ');
+        }
+      }
+    }
+
     final chatGroup = ChatGroup(
       id: sectionId,
-      name: data['name'] as String? ?? data['sectionId'] as String? ?? sectionId,
-      type: data['type'] as String? ?? 'section',
-      memberIds: List<String>.from(data['memberIds'] ?? []),
+      name: resolvedName,
+      type: type,
+      memberIds: memberIds,
       lastMessage: '',
       lastSenderName: '',
       mutedBy: List<String>.from(data['mutedBy'] ?? []),

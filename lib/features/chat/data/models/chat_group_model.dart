@@ -32,6 +32,24 @@ class ChatGroupModel extends ChatGroup {
       final otherUid = memberIds.firstWhere((id) => id != currentUid, orElse: () => '');
       if (names != null && otherUid.isNotEmpty) {
         resolvedName = names[otherUid] as String? ?? resolvedName;
+      } else if (resolvedName.contains(' & ')) {
+        final parts = resolvedName.split(' & ');
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final email = user.email ?? '';
+          final localPart = email.split('@').first;
+          final currentDisplayName = user.displayName?.isNotEmpty == true 
+              ? user.displayName! 
+              : localPart.replaceAll(RegExp(r'[._]'), ' ')
+                  .split(' ')
+                  .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+                  .join(' ');
+          
+          if (parts.contains(currentDisplayName)) {
+            parts.remove(currentDisplayName);
+            resolvedName = parts.join(' & ');
+          }
+        }
       }
     }
 
