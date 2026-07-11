@@ -1036,10 +1036,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             stream: FirebaseFirestore.instance.collection('chats').doc(widget.sectionId).snapshots(),
             builder: (context, snap) {
               final data = snap.hasData && snap.data!.exists ? snap.data!.data() as Map<String, dynamic> : <String, dynamic>{};
-              final type = data['type'] as String? ?? 'section';
+              String type = data['type'] as String? ?? 'section';
               final rawChatName = data['name'] as String? ?? data['sectionId'] as String? ?? widget.sectionId;
               String chatName = rawChatName;
               final memberIds = List<String>.from(data['memberIds'] ?? []);
+              
+              if (type != 'direct' && chatName.contains(' & ') && memberIds.length <= 2) {
+                type = 'direct';
+              }
               
               if (type == 'section' && chatName.startsWith('E') && chatName.length > 1 && RegExp(r'^\d').hasMatch(chatName.substring(1))) {
                 chatName = chatName.substring(1);
@@ -1052,9 +1056,18 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                 } else if (chatName.contains(' & ')) {
                   final parts = chatName.split(' & ');
                   final currentName = _chatService.currentDisplayName;
-                  if (parts.contains(currentName)) {
-                    parts.remove(currentName);
-                    chatName = parts.join(' & ');
+                  
+                  final cleanParts = parts.map((p) => p.trim()).toList();
+                  final cleanCurrentName = currentName.trim();
+                  
+                  if (cleanParts.contains(cleanCurrentName)) {
+                    cleanParts.remove(cleanCurrentName);
+                    chatName = cleanParts.join(' & ');
+                  } else {
+                    String temp = chatName.replaceAll(currentName, '').replaceAll('&', '').trim();
+                    if (temp.isNotEmpty) {
+                      chatName = temp;
+                    }
                   }
                 }
               }

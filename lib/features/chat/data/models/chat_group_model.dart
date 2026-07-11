@@ -17,10 +17,15 @@ class ChatGroupModel extends ChatGroup {
 
   factory ChatGroupModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    final type = data['type'] as String? ?? 'section';
+    String type = data['type'] as String? ?? 'section';
     final memberIds = List<String>.from(data['memberIds'] ?? data['participants'] ?? []);
     
     String resolvedName = data['name'] as String? ?? data['sectionId'] as String? ?? 'Unknown Group';
+
+    // Fallback for older direct chats that might not have the 'type' field set correctly
+    if (type != 'direct' && resolvedName.contains(' & ') && memberIds.length <= 2) {
+      type = 'direct';
+    }
     if (type == 'section' && resolvedName.startsWith('E')) {
       if (resolvedName.length > 1 && RegExp(r'^\d').hasMatch(resolvedName.substring(1))) {
         resolvedName = resolvedName.substring(1);
@@ -45,9 +50,18 @@ class ChatGroupModel extends ChatGroup {
                   .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
                   .join(' ');
           
-          if (parts.contains(currentDisplayName)) {
-            parts.remove(currentDisplayName);
-            resolvedName = parts.join(' & ');
+          final cleanParts = parts.map((p) => p.trim()).toList();
+          final cleanCurrentName = currentDisplayName.trim();
+          
+          if (cleanParts.contains(cleanCurrentName)) {
+            cleanParts.remove(cleanCurrentName);
+            resolvedName = cleanParts.join(' & ');
+          } else {
+            // Fallback robust replacement if exact match fails
+            String temp = resolvedName.replaceAll(currentDisplayName, '').replaceAll('&', '').trim();
+            if (temp.isNotEmpty) {
+              resolvedName = temp;
+            }
           }
         }
       }
