@@ -27,7 +27,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
 
     return AppBackground(
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,

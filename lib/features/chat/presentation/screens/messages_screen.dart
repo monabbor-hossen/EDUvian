@@ -413,7 +413,7 @@ class _ChatTile extends StatefulWidget {
 class _ChatTileState extends State<_ChatTile> {
   double _swipeOffset = 0;
   bool _swiping = false;
-  static const _revealThreshold = 80.0;
+  static const _revealThreshold = 140.0;
 
   @override
   void didUpdateWidget(covariant _ChatTile oldWidget) {
@@ -666,7 +666,7 @@ class _RevealButton extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        width: 80,
+        width: 70,
         height: 78,
         color: color,
         child: Icon(icon, color: iconColor, size: 24),
@@ -728,16 +728,22 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
     final membersAsync = ref.watch(chatMembersProvider(widget.chat.id));
     final isMuted = widget.chat.mutedBy.contains(widget.currentUid);
 
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
     return GlassContainer(
       blur: 24,
       alpha: 0.8,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPadding > 0 ? bottomPadding : 24),
       borderColor: dark ? Colors.white10 : Colors.black.withValues(alpha: 0.08),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
           Center(
             child: Container(
               width: 38,
@@ -814,12 +820,18 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              shortName,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: dark ? Colors.white70 : Colors.black87,
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                shortName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: dark ? Colors.white70 : Colors.black87,
+                                ),
                               ),
                             ),
                           ],
@@ -874,10 +886,12 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
                 ),
               ),
             ),
+            ],
           ],
-        ],
+        ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -1443,18 +1457,21 @@ class _MessageInput extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Attach button
-              IconButton(
-                icon: Icon(Icons.add_circle_outline_rounded,
-                    color: dark ? Colors.white54 : Colors.black45, size: 24),
-                onPressed: () {},
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: IconButton(
+                  icon: Icon(Icons.add_circle_outline_rounded,
+                      color: dark ? Colors.white54 : Colors.black45, size: 24),
+                  onPressed: () {},
+                ),
               ),
 
               // Text Field Container
               Expanded(
                 child: Container(
-                  height: 42,
                   decoration: BoxDecoration(
                     color: dark
                         ? Colors.white.withValues(alpha: 0.05)
@@ -1466,78 +1483,84 @@ class _MessageInput extends StatelessWidget {
                           : Colors.black.withValues(alpha: 0.08),
                     ),
                   ),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
                   child: TextField(
                     controller: controller,
+                    maxLines: 5,
+                    minLines: 1,
+                    keyboardType: TextInputType.multiline,
                     style: GoogleFonts.inter(
                         fontSize: 14.5,
                         color: dark ? Colors.white : Colors.black87),
-                    textInputAction: TextInputAction.send,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       hintStyle: GoogleFonts.inter(
                           fontSize: 14.5,
                           color: dark ? Colors.white38 : Colors.black38),
                       border: InputBorder.none,
+                      isDense: true,
                       contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     ),
-                    onSubmitted: (_) => onSend(),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
 
               // Send button
-              IconButton(
-                icon: AnimatedScale(
-                  scale: hasText ? 1.0 : 0.85,
-                  duration: 150.ms,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: hasText
-                          ? const LinearGradient(
-                              colors: [primaryColor, secondaryColor],
-                            )
-                          : null,
-                      color: hasText
-                          ? null
-                          : (dark
-                              ? Colors.white.withValues(alpha: 0.04)
-                              : Colors.black.withValues(alpha: 0.04)),
-                      boxShadow: hasText
-                          ? [
-                              BoxShadow(
-                                color: primaryColor.withValues(alpha: 0.35),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: IconButton(
+                  icon: AnimatedScale(
+                    scale: hasText ? 1.0 : 0.85,
+                    duration: 150.ms,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: hasText
+                            ? const LinearGradient(
+                                colors: [primaryColor, secondaryColor],
                               )
-                            ]
-                          : [],
-                    ),
-                    child: Center(
-                      child: sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                            : null,
+                        color: hasText
+                            ? null
+                            : (dark
+                                ? Colors.white.withValues(alpha: 0.04)
+                                : Colors.black.withValues(alpha: 0.04)),
+                        boxShadow: hasText
+                            ? [
+                                BoxShadow(
+                                  color: primaryColor.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                )
+                              ]
+                            : [],
+                      ),
+                      child: Center(
+                        child: sending
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                Icons.send_rounded,
+                                size: 18,
+                                color: hasText
+                                    ? Colors.white
+                                    : (dark ? Colors.white38 : Colors.black38),
                               ),
-                            )
-                          : Icon(
-                              Icons.send_rounded,
-                              size: 18,
-                              color: hasText
-                                  ? Colors.white
-                                  : (dark ? Colors.white38 : Colors.black38),
-                            ),
+                      ),
                     ),
                   ),
+                  onPressed: hasText ? onSend : null,
                 ),
-                onPressed: hasText ? onSend : null,
               ),
             ],
           ),

@@ -137,7 +137,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                                           _buildNavItem(Icons.calendar_month_rounded, 'Routine', 1, dark),
                                         ],
                                       ),
-                                      const SizedBox(width: 80),
+                                      const Spacer(),
                                       Row(
                                         children: [
                                           _buildNavItem(Icons.calculate_rounded, 'Calc', 3, dark),

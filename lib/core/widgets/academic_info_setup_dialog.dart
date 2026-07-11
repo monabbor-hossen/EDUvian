@@ -161,12 +161,13 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
               borderRadius: BorderRadius.circular(28),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                  child: Column(
-                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                    child: Column(
+                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                       // ── Icon ───────────────────────────────────────────────
                       Center(
                         child: Container(
@@ -345,6 +346,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       ),
                     ],
                   ),
+                ),
                 ),
               ),
             ),

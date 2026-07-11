@@ -26,7 +26,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
   Widget build(BuildContext context) {
     return AppBackground(
       child: Scaffold(
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
