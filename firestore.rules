@@ -1,33 +1,89 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(chatData) {
+      return isSignedIn() && (
+        ('participants' in chatData && request.auth.uid in chatData.participants) ||
+        ('memberIds' in chatData && request.auth.uid in chatData.memberIds)
+      );
+    }
+
+    function isCreator(chatData) {
+      return isSignedIn() && chatData.creatorId == request.auth.uid;
+    }
+
     // Allow authenticated users to read and write routines
     match /routines/{batchId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isSignedIn();
     }
-    
-    // Allow all authenticated users to search user profiles,
-    // but only the owner can write their own document (e.g. academic_info)
+
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == userId;
     }
-    
-    // Chat groups: any logged-in user can create a group.
-    // Read/update is open to authenticated users (member check is app-level).
+
     match /chats/{chatId} {
-      allow create: if request.auth != null;
-      allow read, update: if request.auth != null;
+      // Anyone logged in can check or create new custom chats
+      allow create: if isSignedIn();
       
-      // Messages subcollection
+      // Reading chats is allowed for group members, OR if it's an official section chat. Also allow if document doesn't exist yet to prevent listener errors.
+      allow read: if resource == null || isMember(resource.data) || ('type' in resource.data && resource.data.type == 'section');
+
+      // Rule for updating chat metadata (names, participants, last messages)
+      allow update: if isSignedIn() && (
+        // 1. Members can update message previews & mute arrays
+        (isMember(resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage', 'lastSenderName', 'lastSenderId', 'lastTimestamp', 'lastMessageTime', 'mutedBy'])) ||
+        
+        // 2. Custom group creators can edit any metadata or change participants
+        (resource.data.type == 'custom' && isCreator(resource.data)) ||
+        
+        // 3. Direct DMs can be modified by their members to exit or mute
+        (resource.data.type == 'direct' && isMember(resource.data)) ||
+        
+        // 4. Anyone can join an official section chat
+        (resource.data.type == 'section' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'participants', 'sectionId', 'type']))
+      );
+
+      // Section metadata cannot be updated/deleted by students
+      allow delete: if isSignedIn() && resource.data.type == 'custom' && isCreator(resource.data);
+
+      // Rules for nested subcollections
       match /messages/{messageId} {
-        allow read, write: if request.auth != null;
+        allow read: if !exists(/databases/$(database)/documents/chats/$(chatId)) || (
+                       isMember(get(/databases/$(database)/documents/chats/$(chatId)).data) || 
+                       get(/databases/$(database)/documents/chats/$(chatId)).data.type == 'section'
+                    );
+        
+        allow create: if exists(/databases/$(database)/documents/chats/$(chatId)) && (
+                        (isMember(get(/databases/$(database)/documents/chats/$(chatId)).data) || 
+                         get(/databases/$(database)/documents/chats/$(chatId)).data.type == 'section')
+                        && request.resource.data.senderId == request.auth.uid
+                      );
+                      
+        allow update, delete: if false; // Messages are immutable
       }
 
-      // Members subcollection
       match /members/{memberId} {
-        allow read, write: if request.auth != null;
+        allow read: if !exists(/databases/$(database)/documents/chats/$(chatId)) || (
+                       isMember(get(/databases/$(database)/documents/chats/$(chatId)).data) || 
+                       get(/databases/$(database)/documents/chats/$(chatId)).data.type == 'section'
+                    );
+        
+        // Allow members to be added/removed/updated
+        allow create, update, delete: if isSignedIn() && (
+          !exists(/databases/$(database)/documents/chats/$(chatId)) ||
+          get(/databases/$(database)/documents/chats/$(chatId)).data.type == 'section' ||
+          isCreator(get(/databases/$(database)/documents/chats/$(chatId)).data) ||
+          request.auth.uid == memberId
+        );
       }
     }
   }

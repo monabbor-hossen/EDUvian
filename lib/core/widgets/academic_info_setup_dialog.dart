@@ -74,21 +74,54 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('academic_info', raw);
     
-    // Also persist to Firestore so reinstalls / new devices skip the popup
+    // Parse the raw batch string for structured Firestore fields
+    final info = parseAcademicInfo(raw);
+    
+    // Also persist to Firestore so reinstalls / new devices skip the popup.
+    // We save both the raw string AND structured queryable fields so classmate
+    // queries can use compound Firestore filters.
     final uid = FirebaseAuth.instance.currentUser?.uid;
+    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
     if (uid != null) {
       try {
+        final dataToSave = <String, dynamic>{
+          'academic_info': raw,
+        };
+        if (info != null) {
+          // Determine shift from email (ends with 'e' before domain = Evening)
+          final localPart = userEmail.split('@').first.toLowerCase();
+          final shift = localPart.endsWith('e') ? 'Evening' : 'Regular';
+          
+          await prefs.setString('shift', shift); // Store shift in SharedPreferences for routine generating
+          
+          dataToSave['semester']   = info.semester;
+          dataToSave['department'] = shift == 'Evening' ? 'EBSC in CSE' : 'BSC in CSE';
+          dataToSave['section']    = info.section;
+          dataToSave['shift']      = shift;
+        }
         await FirebaseFirestore.instance
             .collection('users')
             .doc(uid)
-            .set({'academic_info': raw}, SetOptions(merge: true));
+            .set(dataToSave, SetOptions(merge: true));
       } catch (_) {
         // Non-blocking — local save already succeeded
       }
     }
 
-    // Subscribe to new topic for notifications (fire-and-forget to avoid blocking UI)
-    NotificationService().subscribeToBatchTopic(raw);
+    // Subscribe to batch topic (routine updates) and official chat topic
+    if (info != null) {
+      final localPart = userEmail.split('@').first.toLowerCase();
+      final shift = localPart.endsWith('e') ? 'Evening' : 'Regular';
+      
+      NotificationService().subscribeToBatchTopic(raw, shift: shift);
+      
+      NotificationService().subscribeToOfficialChatTopic(
+        semester:   info.semester,
+        department: shift == 'Evening' ? 'EBSC in CSE' : 'BSC in CSE', 
+        section:    info.section,
+        shift:      shift,          
+      );
+    }
     
     if (mounted) Navigator.of(context).pop(true);
   }

@@ -8,6 +8,17 @@ abstract class ChatRepository {
   Future<void> sendMessage(String sectionId, String text);
   Future<void> registerMember(String sectionId);
   Future<List<Map<String, dynamic>>> searchUsers(String query);
+  Future<List<Map<String, dynamic>>> fetchClassmates({
+    required int semester,
+    required String department,
+    int? section,
+    required String shift,
+  });
+  Future<String> getOrCreateDirectChat({
+    required String otherUserUid,
+    required String otherUserName,
+    required String otherUserEmail,
+  });
   Future<String> createCustomGroup(String name, List<Map<String, dynamic>> selectedUsers);
 
   Stream<List<ChatMessage>> streamMessages(String sectionId);

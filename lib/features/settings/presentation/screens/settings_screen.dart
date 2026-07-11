@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -45,16 +47,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _saveAcademicInfo(String value) async {
     final prefs = await SharedPreferences.getInstance();
     
+    // Determine shift
+    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+    final localPart = userEmail.split('@').first.toLowerCase();
+    final shift = localPart.endsWith('e') ? 'Evening' : 'Regular';
+    
     // Unsubscribe from old topic if it exists and is different
     if (_academicInfo.isNotEmpty && _academicInfo != value) {
-      await NotificationService().unsubscribeFromBatchTopic(_academicInfo);
+      final oldShift = prefs.getString('shift') ?? 'Regular';
+      await NotificationService().unsubscribeFromBatchTopic(_academicInfo, shift: oldShift);
     }
     
     await prefs.setString('academic_info', value);
+    await prefs.setString('shift', shift);
     
     // Subscribe to new topic only if notifications are enabled
     if (_notificationsEnabled) {
-      await NotificationService().subscribeToBatchTopic(value);
+      await NotificationService().subscribeToBatchTopic(value, shift: shift);
+    }
+    
+    // Sync to Firestore
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final info = parseAcademicInfo(value);
+      final dataToSave = <String, dynamic>{
+        'academic_info': value,
+      };
+      if (info != null) {
+        dataToSave['semester']   = info.semester;
+        dataToSave['department'] = shift == 'Evening' ? 'EBSC in CSE' : 'BSC in CSE';
+        dataToSave['section']    = info.section;
+        dataToSave['shift']      = shift;
+      }
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .set(dataToSave, SetOptions(merge: true));
+      } catch (_) {}
     }
     
     if (mounted) {

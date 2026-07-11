@@ -21,23 +21,37 @@ final routineServiceProvider = Provider<RoutineRepository>((ref) {
   return ref.watch(routineRepositoryProvider);
 });
 
-/// Reads academic_info from SharedPreferences once.
+/// Reads academic_info from SharedPreferences once. (Deprecated: Use userAcademicPrefsProvider instead)
 final academicInfoProvider = FutureProvider<String>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString('academic_info') ?? '';
 });
 
-String? batchIdFromRaw(String raw) {
+class UserAcademicPrefs {
+  final String info;
+  final String shift;
+  UserAcademicPrefs({required this.info, required this.shift});
+}
+
+final userAcademicPrefsProvider = FutureProvider<UserAcademicPrefs>((ref) async {
+  final info = await ref.watch(academicInfoProvider.future);
+  final prefs = await SharedPreferences.getInstance();
+  final shift = prefs.getString('shift') ?? 'Regular';
+  return UserAcademicPrefs(info: info, shift: shift);
+});
+
+String? batchIdFromRaw(String raw, String shift) {
   final info = parseAcademicInfo(raw);
   if (info == null) return null;
-  final base = '${info.semester}${info.department}';
+  final prefix = shift == 'Evening' ? 'E_' : '';
+  final base = '$prefix${info.semester}${info.department}';
   return info.section != null ? '${base}_${info.section}' : base;
 }
 
-/// Firestore document ID derived from the current academic_info.
+/// Firestore document ID derived from the current academic_info and shift.
 final batchIdProvider = Provider<String?>((ref) {
-  return ref.watch(academicInfoProvider).when(
-    data: batchIdFromRaw,
+  return ref.watch(userAcademicPrefsProvider).when(
+    data: (prefs) => batchIdFromRaw(prefs.info, prefs.shift),
     loading: () => null,
     error: (_, __) => null,
   );
@@ -45,13 +59,13 @@ final batchIdProvider = Provider<String?>((ref) {
 
 /// Live stream of the full routine for the current batch.
 final routineProvider = StreamProvider<Map<String, List<ClassEntry>>>((ref) {
-  final infoAsync = ref.watch(academicInfoProvider);
+  final prefsAsync = ref.watch(userAcademicPrefsProvider);
 
-  return infoAsync.when(
+  return prefsAsync.when(
     loading: () => Stream.value({}),
     error: (_, __) => Stream.value({}),
-    data: (raw) {
-      final batchId = batchIdFromRaw(raw);
+    data: (prefs) {
+      final batchId = batchIdFromRaw(prefs.info, prefs.shift);
       if (batchId == null || batchId.isEmpty) return Stream.value({});
 
       final repository = ref.watch(routineRepositoryProvider);

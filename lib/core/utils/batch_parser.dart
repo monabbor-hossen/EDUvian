@@ -34,20 +34,13 @@ class BatchParser {
       );
     }
 
-    // 1. Determine shift & department from email
-    final localPart = email.split('@').first.trim().toLowerCase();
-    
-    // Check if the local part ends with an 'e' (Evening shift)
-    final isEvening = localPart.endsWith('e');
-    
-    final shift = isEvening ? 'Evening' : 'Regular';
-    final departmentName = isEvening ? 'EBSC in CSE' : 'BSC in CSE';
-
-    // 2. Extract semester and section from batch string
-    // Matches patterns like "7DCSE.2" or "12DCSE"
+    // 1. Extract semester, shift letter, department, and section from batch string
+    // Matches patterns like "7DCSE.2" or "12ECSE"
     // Group 1: Semester digits
-    // Group 2: Section digits (optional, after the dot)
-    final regex = RegExp(r'^(\d+)[a-zA-Z]+(?:\.(\d+))?$');
+    // Group 2: Shift letter (e.g. D or E)
+    // Group 3: Department letters (e.g. CSE)
+    // Group 4: Section digits (optional, after the dot)
+    final regex = RegExp(r'^(\d+)([a-zA-Z])([a-zA-Z]+)(?:\.(\d+))?$');
     final match = regex.firstMatch(batchString.trim());
 
     if (match == null) {
@@ -55,10 +48,21 @@ class BatchParser {
     }
 
     final semester = int.parse(match.group(1)!);
+    final shiftLetter = match.group(2)!.toUpperCase();
+    final deptLetters = match.group(3)!.toUpperCase();
+    
     int? section;
-    if (match.group(2) != null) {
-      section = int.parse(match.group(2)!);
+    if (match.group(4) != null) {
+      section = int.parse(match.group(4)!);
     }
+
+    // 2. Determine Shift
+    final isEvening = shiftLetter == 'E';
+    final shift = isEvening ? 'Evening' : 'Regular';
+
+    // 3. Determine Department string for saving
+    final prefix = isEvening ? 'EBSC in' : 'BSC in';
+    final departmentName = '$prefix $deptLetters';
 
     return StudentBatchModel(
       semester: semester,

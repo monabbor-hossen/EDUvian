@@ -40,7 +40,12 @@ class RoutineRemoteDataSourceImpl implements RoutineRemoteDataSource {
     if (info == null) {
       throw Exception('Academic info not set. Please update it in Settings.');
     }
-    final base = '${info.semester}${info.department}';
+    
+    // Read the shift we saved during setup
+    final shift = prefs.getString('shift') ?? 'Regular';
+    final prefix = shift == 'Evening' ? 'E_' : '';
+    
+    final base = '${prefix}${info.semester}${info.department}';
     return info.section != null ? '${base}_${info.section}' : base;
   }
 
@@ -74,7 +79,9 @@ class RoutineRemoteDataSourceImpl implements RoutineRemoteDataSource {
     if (rawInfo != null && rawInfo.isNotEmpty) {
       final info = parseAcademicInfo(rawInfo);
       if (info != null) {
-        String topic = 'batch_${info.semester}_${info.department}';
+        final shift = prefs.getString('shift') ?? 'Regular';
+        final prefix = shift == 'Evening' ? 'E_' : '';
+        String topic = 'batch_$prefix${info.semester}_${info.department}';
         if (info.section != null) topic += '_${info.section}';
 
         await _notificationService.sendNotificationToTopic(
@@ -120,7 +127,9 @@ class RoutineRemoteDataSourceImpl implements RoutineRemoteDataSource {
     if (rawInfo != null && rawInfo.isNotEmpty) {
       final info = parseAcademicInfo(rawInfo);
       if (info != null) {
-        String topic = 'batch_${info.semester}_${info.department}';
+        final shift = prefs.getString('shift') ?? 'Regular';
+        final prefix = shift == 'Evening' ? 'E_' : '';
+        String topic = 'batch_$prefix${info.semester}_${info.department}';
         if (info.section != null) topic += '_${info.section}';
 
         final body = notificationHint ?? "${entry.subject} on $day has been updated.";
@@ -154,7 +163,9 @@ class RoutineRemoteDataSourceImpl implements RoutineRemoteDataSource {
     if (rawInfo != null && rawInfo.isNotEmpty) {
       final info = parseAcademicInfo(rawInfo);
       if (info != null) {
-        String topic = 'batch_${info.semester}_${info.department}';
+        final shift = prefs.getString('shift') ?? 'Regular';
+        final prefix = shift == 'Evening' ? 'E_' : '';
+        String topic = 'batch_$prefix${info.semester}_${info.department}';
         if (info.section != null) topic += '_${info.section}';
 
         _notificationService.sendNotificationToTopic(

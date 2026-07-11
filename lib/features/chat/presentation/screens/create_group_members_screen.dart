@@ -41,21 +41,17 @@ class _CreateGroupMembersScreenState
   Future<void> _loadAllUsers() async {
     setState(() => _loading = true);
     try {
-      final chatService = ref.read(chatServiceProvider);
-      final users = await chatService.searchUsers('');
-      // Filter out current user
-      final currentUid = chatService.currentUid;
-      users.removeWhere((u) => u['uid'] == currentUid);
+      final users = await ref.read(classmatesProvider.future);
       
-      // Sort alphabetically
+      // Sort alphabetically (classmatesProvider is already sorted, but we ensure it here)
       users.sort((a, b) => (a['name'] as String? ?? '')
           .toLowerCase()
           .compareTo((b['name'] as String? ?? '').toLowerCase()));
           
       if (mounted) {
         setState(() {
-          _allUsers = users;
-          _searchResults = List.from(users);
+          _allUsers = List<Map<String, dynamic>>.from(users);
+          _searchResults = List<Map<String, dynamic>>.from(users);
           _loading = false;
         });
       }

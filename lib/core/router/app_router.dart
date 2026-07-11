@@ -15,6 +15,7 @@ import '../../features/dashboard/presentation/screens/main_layout_screen.dart';
 import '../../features/chat/presentation/screens/create_group_members_screen.dart';
 import '../../features/chat/presentation/screens/create_group_name_screen.dart';
 import '../../features/chat/presentation/screens/messages_screen.dart';
+import '../../features/chat/presentation/screens/new_chat_screen.dart';
 import '../../features/routine/presentation/screens/routine_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 
@@ -73,6 +74,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                     );
                   },
+                ),
+                GoRoute(
+                  path: 'new-chat',
+                  pageBuilder: (context, state) => CustomTransitionPage(
+                    child: const NewChatScreen(),
+                    transitionsBuilder: (_, anim, __, child) => SlideTransition(
+                      position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                          .animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
+                      child: child,
+                    ),
+                  ),
                 ),
                 GoRoute(
                   path: 'create-group-members',

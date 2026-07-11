@@ -141,7 +141,7 @@ class NotificationService {
   }
 
   /// Generates a clean FCM topic string from the raw batch format.
-  String? _generateTopicFromBatch(String raw) {
+  String? _generateTopicFromBatch(String raw, String shift) {
     final upper = raw.trim().toUpperCase();
     final pattern = RegExp(r'^(\d+)[A-Z]([A-Z]+)(?:\.(\d+))?$');
     final match = pattern.firstMatch(upper);
@@ -152,14 +152,15 @@ class NotificationService {
     final department = match.group(2)!;
     final section = match.group(3);
 
-    String topic = 'batch_${semester}_$department';
+    final prefix = shift == 'Evening' ? 'E_' : '';
+    String topic = 'batch_$prefix${semester}_$department';
     if (section != null) topic += '_$section';
 
     return topic;
   }
 
-  Future<void> subscribeToBatchTopic(String batchString) async {
-    final topic = _generateTopicFromBatch(batchString);
+  Future<void> subscribeToBatchTopic(String batchString, {String shift = 'Regular'}) async {
+    final topic = _generateTopicFromBatch(batchString, shift);
     if (topic != null) {
       try {
         await _fcm.subscribeToTopic(topic).timeout(const Duration(seconds: 5));
@@ -170,8 +171,8 @@ class NotificationService {
     }
   }
   
-  Future<void> unsubscribeFromBatchTopic(String batchString) async {
-    final topic = _generateTopicFromBatch(batchString);
+  Future<void> unsubscribeFromBatchTopic(String batchString, {String shift = 'Regular'}) async {
+    final topic = _generateTopicFromBatch(batchString, shift);
     if (topic != null) {
       try {
         await _fcm.unsubscribeFromTopic(topic).timeout(const Duration(seconds: 5));
@@ -179,6 +180,44 @@ class NotificationService {
       } catch (e) {
         debugPrint("Error unsubscribing from FCM topic $topic: $e");
       }
+    }
+  }
+
+  /// Builds and subscribes to the Official Class Group chat FCM topic.
+  /// Topic format: `chat_official_{semester}_{department}_{section}_{shift}`
+  /// e.g.: `chat_official_7_CSE_2_Evening`
+  Future<void> subscribeToOfficialChatTopic({
+    required int semester,
+    required String department,
+    int? section,
+    required String shift,
+  }) async {
+    String topic = 'chat_official_${semester}_${department.toUpperCase()}';
+    if (section != null) topic += '_$section';
+    topic += '_${shift.replaceAll(' ', '_')}';
+    try {
+      await _fcm.subscribeToTopic(topic).timeout(const Duration(seconds: 5));
+      debugPrint("Subscribed to official chat topic: $topic");
+    } catch (e) {
+      debugPrint("Error subscribing to official chat topic $topic: $e");
+    }
+  }
+
+  /// Unsubscribes from the Official Class Group chat FCM topic.
+  Future<void> unsubscribeFromOfficialChatTopic({
+    required int semester,
+    required String department,
+    int? section,
+    required String shift,
+  }) async {
+    String topic = 'chat_official_${semester}_${department.toUpperCase()}';
+    if (section != null) topic += '_$section';
+    topic += '_${shift.replaceAll(' ', '_')}';
+    try {
+      await _fcm.unsubscribeFromTopic(topic).timeout(const Duration(seconds: 5));
+      debugPrint("Unsubscribed from official chat topic: $topic");
+    } catch (e) {
+      debugPrint("Error unsubscribing from official chat topic $topic: $e");
     }
   }
 

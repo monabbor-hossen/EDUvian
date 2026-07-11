@@ -150,14 +150,31 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => _NoSectionView(dark: widget.dark),
               data: (userChats) {
+                // Background cleanup: if they are in a section chat that doesn't match the current sectionId,
+                // automatically leave it in the background so it disappears from their inbox.
+                for (final chat in userChats) {
+                  if (chat.type == 'section' && chat.id != sectionId) {
+                    Future.microtask(() {
+                      try {
+                        ref.read(chatServiceProvider).leaveGroup(chat.id);
+                      } catch (e) {
+                        debugPrint("Error leaving old section chat: $e");
+                      }
+                    });
+                  }
+                }
+
                 // Ensure sectionId chat is always visible even if not yet fully registered
                 List<ChatGroup> allChats = List.from(userChats);
                 if (sectionId != null && sectionId.isNotEmpty) {
                   final hasSection = allChats.any((c) => c.id == sectionId);
                   if (!hasSection) {
+                    final cleanName = (sectionId.startsWith('E') && sectionId.length > 1 && RegExp(r'^\d').hasMatch(sectionId.substring(1)))
+                        ? sectionId.substring(1)
+                        : sectionId;
                     allChats.insert(0, ChatGroup(
                       id: sectionId,
-                      name: sectionId,
+                      name: cleanName,
                       type: 'section',
                       memberIds: [],
                       lastMessage: 'Tap to join section chat',
@@ -215,7 +232,7 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: GestureDetector(
-            onTap: () => context.push('/messages/create-group-members'),
+            onTap: () => context.push('/messages/new-chat'),
             child: Container(
               width: 38,
               height: 38,
@@ -335,6 +352,7 @@ class _AllChatsListState extends State<_AllChatsList> {
                 timestamp: chat.lastTimestamp,
                 dark: dark,
                 isMuted: currentUid != null && chat.mutedBy.contains(currentUid),
+                isSection: chat.type == 'section',
                 onTap: () {
                   context.push('/messages/room/${chat.id}');
                 },
@@ -370,6 +388,7 @@ class _ChatTile extends StatefulWidget {
   final DateTime? timestamp;
   final bool dark;
   final bool isMuted;
+  final bool isSection;
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback onInfo;
@@ -381,6 +400,7 @@ class _ChatTile extends StatefulWidget {
     required this.timestamp,
     required this.dark,
     required this.isMuted,
+    required this.isSection,
     required this.onTap,
     required this.onDelete,
     required this.onInfo,
@@ -413,15 +433,15 @@ class _ChatTileState extends State<_ChatTile> {
     final avatarColor = _avatarColor(widget.chatName);
 
     return GestureDetector(
-      onHorizontalDragStart: (_) => setState(() => _swiping = true),
-      onHorizontalDragUpdate: (details) {
+      onHorizontalDragStart: widget.isSection ? null : (_) => setState(() => _swiping = true),
+      onHorizontalDragUpdate: widget.isSection ? null : (details) {
         if (!_swiping) return;
         setState(() {
           _swipeOffset =
               (_swipeOffset + details.delta.dx).clamp(-_revealThreshold, 0.0);
         });
       },
-      onHorizontalDragEnd: (_) {
+      onHorizontalDragEnd: widget.isSection ? null : (_) {
         if (_swipeOffset < -_revealThreshold * 0.5) {
           setState(() {
             _swipeOffset = -_revealThreshold;
@@ -739,79 +759,82 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
             ),
           ),
           const SizedBox(height: 4),
-          membersAsync.when(
-            loading: () => const Center(child: SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (_) => Text(
-              '${widget.chat.memberIds.length} Members',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: dark ? Colors.white54 : Colors.black54,
+          if (widget.chat.type != 'direct') ...[
+            membersAsync.when(
+              loading: () => const Center(child: SizedBox(height: 14, width: 14, child: CircularProgressIndicator(strokeWidth: 2))),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (_) => Text(
+                '${widget.chat.memberIds.length} Members',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: dark ? Colors.white54 : Colors.black54,
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 16),
-          // Horizontal members list
-          SizedBox(
-            height: 80,
-            child: membersAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error', style: GoogleFonts.inter(color: Colors.red))),
-              data: (members) {
-                // Filter against the authoritative memberIds to exclude stale subcollection docs
-                final validMembers = members
-                    .where((m) => widget.chat.memberIds.contains(m['uid'] as String? ?? ''))
-                    .toList();
-                return ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: validMembers.length,
-                  itemBuilder: (context, index) {
-                    final m = validMembers[index];
-                    final name = m['name'] as String? ?? 'Unknown';
-                    final uid = m['uid'] as String? ?? '';
-                    final parts = name.split(' ');
-                    final shortName = parts.isNotEmpty ? parts[0] : name;
+          if (widget.chat.type != 'direct') ...[
+            // Horizontal members list
+            SizedBox(
+              height: 80,
+              child: membersAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('Error', style: GoogleFonts.inter(color: Colors.red))),
+                data: (members) {
+                  // Filter against the authoritative memberIds to exclude stale subcollection docs
+                  final validMembers = members
+                      .where((m) => widget.chat.memberIds.contains(m['uid'] as String? ?? ''))
+                      .toList();
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: validMembers.length,
+                    itemBuilder: (context, index) {
+                      final m = validMembers[index];
+                      final name = m['name'] as String? ?? 'Unknown';
+                      final uid = m['uid'] as String? ?? '';
+                      final parts = name.split(' ');
+                      final shortName = parts.isNotEmpty ? parts[0] : name;
 
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: _avatarColor(uid),
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircleAvatar(
+                              radius: 24,
+                              backgroundColor: _avatarColor(uid),
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            shortName,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: dark ? Colors.white70 : Colors.black87,
+                            const SizedBox(height: 6),
+                            Text(
+                              shortName,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: dark ? Colors.white70 : Colors.black87,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          const Divider(height: 1),
-          const SizedBox(height: 8),
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+          ],
 
-          // Action: Mute
           ListTile(
             onTap: _isProcessing ? null : () => _mute(!isMuted),
             leading: Icon(
@@ -819,15 +842,15 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               color: dark ? Colors.white70 : Colors.black87,
             ),
             title: Text(
-              isMuted ? 'Unmute Group' : 'Mute Group',
+              widget.chat.type == 'direct'
+                  ? (isMuted ? 'Unmute Chat' : 'Mute Chat')
+                  : (isMuted ? 'Unmute Group' : 'Mute Group'),
               style: GoogleFonts.inter(
                 fontWeight: FontWeight.w600,
                 color: dark ? Colors.white : Colors.black87,
               ),
             ),
           ),
-
-          // Only allow leave/delete for custom groups OR just leave for everyone
           if (widget.chat.type == 'custom') ...[
             ListTile(
               onTap: _isProcessing ? null : _leave,
@@ -999,7 +1022,12 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             stream: FirebaseFirestore.instance.collection('chats').doc(widget.sectionId).snapshots(),
             builder: (context, snap) {
               final data = snap.hasData && snap.data!.exists ? snap.data!.data() as Map<String, dynamic> : <String, dynamic>{};
-              final chatName = data['name'] as String? ?? data['sectionId'] as String? ?? widget.sectionId;
+              final type = data['type'] as String? ?? 'section';
+              final rawChatName = data['name'] as String? ?? data['sectionId'] as String? ?? widget.sectionId;
+              String chatName = rawChatName;
+              if (chatName.startsWith('E') && chatName.length > 1 && RegExp(r'^\d').hasMatch(chatName.substring(1))) {
+                chatName = chatName.substring(1);
+              }
               final memberIds = List<String>.from(data['memberIds'] ?? []);
               final numMembers = memberIds.isNotEmpty ? memberIds.length : 1;
               
@@ -1078,8 +1106,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          Text(
-                            '$numMembers Members · Active now',
+                           Text(
+                            type == 'direct' ? 'Active now' : '$numMembers Members · Active now',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               color: Colors.greenAccent.shade400,

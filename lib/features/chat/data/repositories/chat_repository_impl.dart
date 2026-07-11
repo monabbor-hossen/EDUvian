@@ -31,6 +31,34 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchClassmates({
+    required int semester,
+    required String department,
+    int? section,
+    required String shift,
+  }) {
+    return _remoteDataSource.fetchClassmates(
+      semester:   semester,
+      department: department,
+      section:    section,
+      shift:      shift,
+    );
+  }
+
+  @override
+  Future<String> getOrCreateDirectChat({
+    required String otherUserUid,
+    required String otherUserName,
+    required String otherUserEmail,
+  }) {
+    return _remoteDataSource.getOrCreateDirectChat(
+      otherUserUid: otherUserUid,
+      otherUserName: otherUserName,
+      otherUserEmail: otherUserEmail,
+    );
+  }
+
+  @override
   Future<String> createCustomGroup(String name, List<Map<String, dynamic>> selectedUsers) {
     return _remoteDataSource.createCustomGroup(name, selectedUsers);
   }
