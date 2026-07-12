@@ -307,7 +307,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         trailing: Switch(
                           value: themeMode == ThemeMode.dark || (themeMode == ThemeMode.system && dark),
-                          activeColor: primaryColor,
+                          activeThumbColor: primaryColor,
                           onChanged: (value) {
                             ref.read(themeModeProvider.notifier).state = value ? ThemeMode.dark : ThemeMode.light;
                           },
@@ -333,7 +333,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         trailing: Switch(
                           value: _notificationsEnabled,
-                          activeColor: primaryColor,
+                          activeThumbColor: primaryColor,
                           onChanged: (value) async {
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setBool('notifications_enabled', value);

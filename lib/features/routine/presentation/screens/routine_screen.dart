@@ -8,7 +8,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/glass_container.dart';
-import '../../../../core/widgets/arrow_tooltip.dart';
 import '../../../../core/utils/time_formatter.dart';
 import '../../../../core/models/academic_info.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -1068,7 +1067,7 @@ void _showClassActionSheet(
       notificationHint = 'Update cleared for ${entry.subject} on $humanDate.';
     } else {
       final parts = <String>[];
-      if (hasText) parts.add(status!.trim());
+      if (hasText) parts.add(status.trim());
       if (overrideStartTime != null) parts.add('Time: ${format12Hour(overrideStartTime!)}');
       if (roomCtrl.text.trim().isNotEmpty) parts.add('Room: ${roomCtrl.text.trim()}');
       notificationHint = '${parts.join(' • ')} — ${entry.subject} on $humanDate';

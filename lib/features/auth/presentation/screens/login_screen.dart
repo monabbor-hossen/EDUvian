@@ -374,9 +374,8 @@ class _AuthTextField extends StatelessWidget {
     required this.hintText,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
-    this.onChanged,
     this.suffixIcon,
-  });
+  }) : onChanged = null;
 
   @override
   Widget build(BuildContext context) {

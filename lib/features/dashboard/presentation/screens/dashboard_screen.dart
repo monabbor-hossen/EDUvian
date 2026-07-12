@@ -9,7 +9,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/utils/time_formatter.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../routine/domain/entities/class_entry.dart';
 import '../../../routine/presentation/providers/routine_providers.dart';
 

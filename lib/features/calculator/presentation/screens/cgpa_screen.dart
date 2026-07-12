@@ -9,7 +9,6 @@ import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/rounded_field.dart';
 import '../../../../core/widgets/dropdown_field.dart';
-import '../../../../core/widgets/subject_autocomplete.dart';
 import '../../../../core/widgets/arrow_tooltip.dart';
 import '../../../../core/models/academic_info.dart';
 import '../../domain/entities/subject.dart';

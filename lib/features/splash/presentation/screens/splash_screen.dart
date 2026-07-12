@@ -340,7 +340,7 @@ class _StarPainter extends CustomPainter {
       final radius = random.nextDouble() * 1.4 + 0.4;
       final base = random.nextDouble() * 0.75 + 0.15;
       final tv = (math.sin(twinkle * 2 * math.pi + i) + 1.0) / 2.0;
-      paint.color = Colors.white.withOpacity(base * (0.25 + 0.75 * tv));
+      paint.color = Colors.white.withValues(alpha: base * (0.25 + 0.75 * tv));
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }

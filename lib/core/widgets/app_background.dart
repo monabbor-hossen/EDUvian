@@ -151,7 +151,7 @@ class StarrySkyPainter extends CustomPainter {
       
       // Vary the phase of twinkle per star using index
       final twinkleVal = (math.sin(twinkle * 2 * math.pi + i) + 1.0) / 2.0;
-      paint.color = Colors.white.withOpacity(baseOpacity * (0.25 + 0.75 * twinkleVal));
+      paint.color = Colors.white.withValues(alpha: baseOpacity * (0.25 + 0.75 * twinkleVal));
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
   }
