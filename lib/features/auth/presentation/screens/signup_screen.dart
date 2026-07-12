@@ -9,80 +9,83 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../providers/auth_providers.dart';
 
-// ─── Local State Providers ────────────────────────────────────────────────────
-final _signupEmailProvider = StateProvider.autoDispose<String>((ref) => '');
-final _signupPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
-final _signupConfirmPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
-final _signupPasswordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
-final _signupConfirmVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
-final _signupLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
-final _signupErrorProvider = StateProvider.autoDispose<String?>((ref) => null);
-
 // ─── Signup Screen ────────────────────────────────────────────────────────────
-class SignupScreen extends ConsumerWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+}
+
+class _SignupScreenState extends ConsumerState<SignupScreen> {
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final TextEditingController _confirmPasswordController;
+
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
+  bool _isLoading = false;
+  String? _errorMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSignup() async {
+    final email = _emailController.text.trim();
+    final pass = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    if (email.isEmpty || pass.isEmpty || confirm.isEmpty) {
+      setState(() => _errorMsg = 'Please fill in all fields.');
+      return;
+    }
+    if (pass != confirm) {
+      setState(() => _errorMsg = 'Passwords do not match.');
+      return;
+    }
+    if (pass.length < 6) {
+      setState(() => _errorMsg = 'Password must be at least 6 characters.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMsg = null;
+    });
+
+    try {
+      await ref.read(authServiceProvider).signUpWithEmail(email, pass);
+      // Clear any stale academic_info so the onboarding dialog will show
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('academic_info');
+      checkedUids.clear();
+      if (mounted) context.go('/');
+    } on FirebaseAuthException catch (e) {
+      setState(() => _errorMsg = e.message ?? 'Registration failed.');
+    } catch (e) {
+      setState(() => _errorMsg = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     final dark = isDark(context);
-
-    final passVisible = ref.watch(_signupPasswordVisibleProvider);
-    final confirmVisible = ref.watch(_signupConfirmVisibleProvider);
-    final isLoading = ref.watch(_signupLoadingProvider);
-    final errorMsg = ref.watch(_signupErrorProvider);
-
-    final emailCtrl =
-        TextEditingController(text: ref.read(_signupEmailProvider));
-    final passCtrl =
-        TextEditingController(text: ref.read(_signupPasswordProvider));
-    final confirmCtrl =
-        TextEditingController(text: ref.read(_signupConfirmPasswordProvider));
-
-    Future<void> handleSignup() async {
-      final email = emailCtrl.text.trim();
-      final pass = passCtrl.text;
-      final confirm = confirmCtrl.text;
-
-      if (email.isEmpty || pass.isEmpty || confirm.isEmpty) {
-        ref.read(_signupErrorProvider.notifier).state =
-            'Please fill in all fields.';
-        return;
-      }
-      if (pass != confirm) {
-        ref.read(_signupErrorProvider.notifier).state =
-            'Passwords do not match.';
-        return;
-      }
-      if (pass.length < 6) {
-        ref.read(_signupErrorProvider.notifier).state =
-            'Password must be at least 6 characters.';
-        return;
-      }
-
-      ref.read(_signupLoadingProvider.notifier).state = true;
-      ref.read(_signupErrorProvider.notifier).state = null;
-
-      try {
-        final result = await ref.read(authServiceProvider).signUpWithEmail(email, pass);
-        // Clear any stale academic_info so the onboarding dialog will show
-        // or properly fetch from Firestore when MainLayoutScreen mounts.
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('academic_info');
-        checkedUids.clear();
-        if (context.mounted) context.go('/');
-      } on FirebaseAuthException catch (e) {
-        ref.read(_signupErrorProvider.notifier).state =
-            e.message ?? 'Registration failed.';
-      } catch (e) {
-        ref.read(_signupErrorProvider.notifier).state =
-            e.toString().replaceAll('Exception: ', '');
-      } finally {
-        if (context.mounted) {
-          ref.read(_signupLoadingProvider.notifier).state = false;
-        }
-      }
-    }
 
     return AppBackground(
       child: Scaffold(
@@ -90,8 +93,7 @@ class SignupScreen extends ConsumerWidget {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 440),
                 decoration: BoxDecoration(
@@ -106,13 +108,12 @@ class SignupScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // ── Logo ──────────────────────────────────────────────────
+                    // ── Logo ────────────────────────────────────────────────────
                     Center(
                       child: Image.asset(
                         'assets/icon/EDUvian-Icon.png',
@@ -122,7 +123,7 @@ class SignupScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // ── Title ─────────────────────────────────────────────────
+                    // ── Title ───────────────────────────────────────────────────
                     const Center(
                       child: Text(
                         'EDUvian',
@@ -146,33 +147,27 @@ class SignupScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 32),
 
-                    // ── Email ─────────────────────────────────────────────────
-                    _fieldLabel('INSTITUTIONAL EMAIL'),
+                    // ── Email ───────────────────────────────────────────────────
+                    _fieldLabel('INSTITUTIONAL EMAIL', dark),
                     const SizedBox(height: 8),
                     _AuthTextField(
-                      controller: emailCtrl,
+                      controller: _emailController,
                       hintText: 'student@university.edu',
                       keyboardType: TextInputType.emailAddress,
-                      onChanged: (v) =>
-                          ref.read(_signupEmailProvider.notifier).state = v,
                     ),
                     const SizedBox(height: 20),
 
-                    // ── Password ──────────────────────────────────────────────
-                    _fieldLabel('PASSWORD'),
+                    // ── Password ────────────────────────────────────────────────
+                    _fieldLabel('PASSWORD', dark),
                     const SizedBox(height: 8),
                     _AuthTextField(
-                      controller: passCtrl,
+                      controller: _passwordController,
                       hintText: '••••••••',
-                      obscureText: !passVisible,
-                      onChanged: (v) =>
-                          ref.read(_signupPasswordProvider.notifier).state = v,
+                      obscureText: !_passwordVisible,
                       suffixIcon: GestureDetector(
-                        onTap: () => ref
-                            .read(_signupPasswordVisibleProvider.notifier)
-                            .state = !passVisible,
+                        onTap: () => setState(() => _passwordVisible = !_passwordVisible),
                         child: Icon(
-                          passVisible
+                          _passwordVisible
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFFAAAAAA),
@@ -182,22 +177,17 @@ class SignupScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // ── Confirm Password ──────────────────────────────────────
-                    _fieldLabel('CONFIRM PASSWORD'),
+                    // ── Confirm Password ────────────────────────────────────────
+                    _fieldLabel('CONFIRM PASSWORD', dark),
                     const SizedBox(height: 8),
                     _AuthTextField(
-                      controller: confirmCtrl,
+                      controller: _confirmPasswordController,
                       hintText: '••••••••',
-                      obscureText: !confirmVisible,
-                      onChanged: (v) => ref
-                          .read(_signupConfirmPasswordProvider.notifier)
-                          .state = v,
+                      obscureText: !_confirmPasswordVisible,
                       suffixIcon: GestureDetector(
-                        onTap: () => ref
-                            .read(_signupConfirmVisibleProvider.notifier)
-                            .state = !confirmVisible,
+                        onTap: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
                         child: Icon(
-                          confirmVisible
+                          _confirmPasswordVisible
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFFAAAAAA),
@@ -206,35 +196,33 @@ class SignupScreen extends ConsumerWidget {
                       ),
                     ),
 
-                    // ── Error ─────────────────────────────────────────────────
-                    if (errorMsg != null) ...[
+                    // ── Error ───────────────────────────────────────────────────
+                    if (_errorMsg != null) ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: Colors.red.shade200),
                         ),
                         child: Text(
-                          errorMsg,
-                          style: TextStyle(
-                              color: Colors.red.shade700, fontSize: 13),
+                          _errorMsg!,
+                          style: TextStyle(color: Colors.red.shade700, fontSize: 13),
                         ),
                       ),
                     ],
 
                     const SizedBox(height: 28),
 
-                    // ── Register Button ───────────────────────────────────────
+                    // ── Register Button ─────────────────────────────────────────
                     _RegisterButton(
-                      isLoading: isLoading,
-                      onPressed: handleSignup,
+                      isLoading: _isLoading,
+                      onPressed: _handleSignup,
                     ),
                     const SizedBox(height: 24),
 
-                    // ── Back to login ─────────────────────────────────────────
+                    // ── Back to login ───────────────────────────────────────────
                     Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
@@ -242,7 +230,9 @@ class SignupScreen extends ConsumerWidget {
                           Text(
                             'Already have an account? ',
                             style: TextStyle(
-                                color: dark ? Colors.white70 : const Color(0xFF555555), fontSize: 14),
+                              color: dark ? Colors.white70 : const Color(0xFF555555),
+                              fontSize: 14,
+                            ),
                           ),
                           GestureDetector(
                             onTap: () => context.pop(),
@@ -269,20 +259,16 @@ class SignupScreen extends ConsumerWidget {
   }
 }
 
-// ─── Helpers ────────────────--------------------------------------------------
-Widget _fieldLabel(String text) {
-  return Builder(
-    builder: (context) {
-      return Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: isDark(context) ? Colors.white70 : const Color(0xFF444444),
-          letterSpacing: 1.0,
-        ),
-      );
-    }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+Widget _fieldLabel(String text, bool dark) {
+  return Text(
+    text,
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: dark ? Colors.white70 : const Color(0xFF444444),
+      letterSpacing: 1.0,
+    ),
   );
 }
 
@@ -310,29 +296,35 @@ class _AuthTextField extends StatelessWidget {
       decoration: BoxDecoration(
         color: dark ? const Color(0xFF2C2C32) : const Color(0xFFF7F4F8),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: dark ? Colors.white12 : const Color(0xFFE8E0EE), width: 1.2),
+        border: Border.all(
+          color: dark ? Colors.white12 : const Color(0xFFE8E0EE),
+          width: 1.2,
+        ),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         onChanged: onChanged,
-        style: TextStyle(fontSize: 15, color: dark ? Colors.white : const Color(0xFF333333)),
+        style: TextStyle(
+          fontSize: 15,
+          color: dark ? Colors.white : const Color(0xFF333333),
+        ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle:
-              TextStyle(color: dark ? Colors.white38 : const Color(0xFFBBBBBB), fontSize: 15),
+          hintStyle: TextStyle(
+            color: dark ? Colors.white38 : const Color(0xFFBBBBBB),
+            fontSize: 15,
+          ),
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
           suffixIcon: suffixIcon != null
               ? Padding(
                   padding: const EdgeInsets.only(right: 14),
                   child: suffixIcon,
                 )
               : null,
-          suffixIconConstraints:
-              const BoxConstraints(minWidth: 40, minHeight: 40),
+          suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
         ),
       ),
     );
@@ -400,8 +392,7 @@ class _RegisterButtonState extends State<_RegisterButton> {
                         ),
                       ),
                       SizedBox(width: 8),
-                      Icon(Icons.arrow_forward,
-                          color: Colors.white, size: 20),
+                      Icon(Icons.arrow_forward, color: Colors.white, size: 20),
                     ],
                   ),
           ),

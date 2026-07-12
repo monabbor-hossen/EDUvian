@@ -9,41 +9,54 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../providers/auth_providers.dart';
 
-// ─── Local State Providers ────────────────────────────────────────────────────
-final _loginEmailProvider = StateProvider.autoDispose<String>((ref) => '');
-final _loginPasswordProvider = StateProvider.autoDispose<String>((ref) => '');
-final _passwordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
-final _isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
-final _loginErrorProvider = StateProvider.autoDispose<String?>((ref) => null);
-
 // ─── Login Screen ─────────────────────────────────────────────────────────────
-class LoginScreen extends ConsumerWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+
+  bool _passwordVisible = false;
+  bool _isLoading = false;
+  String? _errorMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     final dark = isDark(context);
 
-    final passwordVisible = ref.watch(_passwordVisibleProvider);
-    final isLoading = ref.watch(_isLoadingProvider);
-    final errorMsg = ref.watch(_loginErrorProvider);
-
-    final emailCtrl = TextEditingController(text: ref.read(_loginEmailProvider));
-    final passCtrl = TextEditingController(text: ref.read(_loginPasswordProvider));
-
     Future<void> handleEmailLogin() async {
-      final email = emailCtrl.text.trim();
-      final pass = passCtrl.text;
+      final email = _emailController.text.trim();
+      final pass = _passwordController.text;
 
       if (email.isEmpty || pass.isEmpty) {
-        ref.read(_loginErrorProvider.notifier).state =
-            'Please fill in all fields.';
+        setState(() => _errorMsg = 'Please fill in all fields.');
         return;
       }
 
-      ref.read(_isLoadingProvider.notifier).state = true;
-      ref.read(_loginErrorProvider.notifier).state = null;
+      setState(() {
+        _isLoading = true;
+        _errorMsg = null;
+      });
 
       try {
         final result = await ref.read(authServiceProvider).signInWithEmail(email, pass);
@@ -54,21 +67,21 @@ class LoginScreen extends ConsumerWidget {
         
         if (context.mounted) context.go('/');
       } on FirebaseAuthException catch (e) {
-        ref.read(_loginErrorProvider.notifier).state =
-            e.message ?? 'Login failed. Please try again.';
+        setState(() => _errorMsg = e.message ?? 'Login failed. Please try again.');
       } catch (e) {
-        ref.read(_loginErrorProvider.notifier).state =
-            e.toString().replaceAll('Exception: ', '');
+        setState(() => _errorMsg = e.toString().replaceAll('Exception: ', ''));
       } finally {
-        if (context.mounted) {
-          ref.read(_isLoadingProvider.notifier).state = false;
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
 
     Future<void> handleGoogleLogin() async {
-      ref.read(_isLoadingProvider.notifier).state = true;
-      ref.read(_loginErrorProvider.notifier).state = null;
+      setState(() {
+        _isLoading = true;
+        _errorMsg = null;
+      });
       try {
         final result =
             await ref.read(authServiceProvider).signInWithGoogle();
@@ -81,23 +94,20 @@ class LoginScreen extends ConsumerWidget {
           if (context.mounted) context.go('/');
         }
       } on FirebaseAuthException catch (e) {
-        ref.read(_loginErrorProvider.notifier).state =
-            e.message ?? 'Google sign-in failed.';
+        setState(() => _errorMsg = e.message ?? 'Google sign-in failed.');
       } catch (e) {
-        ref.read(_loginErrorProvider.notifier).state =
-            e.toString().replaceAll('Exception: ', '');
+        setState(() => _errorMsg = e.toString().replaceAll('Exception: ', ''));
       } finally {
-        if (context.mounted) {
-          ref.read(_isLoadingProvider.notifier).state = false;
+        if (mounted) {
+          setState(() => _isLoading = false);
         }
       }
     }
 
     Future<void> handleForgotPassword() async {
-      final email = emailCtrl.text.trim();
+      final email = _emailController.text.trim();
       if (email.isEmpty) {
-        ref.read(_loginErrorProvider.notifier).state =
-            'Enter your email above to reset your password.';
+        setState(() => _errorMsg = 'Enter your email above to reset your password.');
         return;
       }
       try {
@@ -115,8 +125,7 @@ class LoginScreen extends ConsumerWidget {
           );
         }
       } on FirebaseAuthException catch (e) {
-        ref.read(_loginErrorProvider.notifier).state =
-            e.message ?? 'Could not send reset email.';
+        setState(() => _errorMsg = e.message ?? 'Could not send reset email.');
       }
     }
 
@@ -186,7 +195,7 @@ class LoginScreen extends ConsumerWidget {
 
                     // ── Google Button ─────────────────────────────────────────
                     _GoogleSignInButton(
-                      onPressed: isLoading ? null : handleGoogleLogin,
+                      onPressed: _isLoading ? null : handleGoogleLogin,
                     ),
                     const SizedBox(height: 24),
 
@@ -233,11 +242,9 @@ class LoginScreen extends ConsumerWidget {
 
                     // ── Email Field ───────────────────────────────────────────
                     _AuthTextField(
-                      controller: emailCtrl,
+                      controller: _emailController,
                       hintText: 'student@eastdelta.edu.bd',
                       keyboardType: TextInputType.emailAddress,
-                      onChanged: (v) =>
-                          ref.read(_loginEmailProvider.notifier).state = v,
                     ),
                     const SizedBox(height: 20),
 
@@ -271,17 +278,13 @@ class LoginScreen extends ConsumerWidget {
 
                     // ── Password Field ────────────────────────────────────────
                     _AuthTextField(
-                      controller: passCtrl,
+                      controller: _passwordController,
                       hintText: '••••••••',
-                      obscureText: !passwordVisible,
-                      onChanged: (v) =>
-                          ref.read(_loginPasswordProvider.notifier).state = v,
+                      obscureText: !_passwordVisible,
                       suffixIcon: GestureDetector(
-                        onTap: () => ref
-                            .read(_passwordVisibleProvider.notifier)
-                            .state = !passwordVisible,
+                        onTap: () => setState(() => _passwordVisible = !_passwordVisible),
                         child: Icon(
-                          passwordVisible
+                          _passwordVisible
                               ? Icons.visibility_outlined
                               : Icons.visibility_off_outlined,
                           color: const Color(0xFFAAAAAA),
@@ -291,7 +294,7 @@ class LoginScreen extends ConsumerWidget {
                     ),
 
                     // ── Error Message ─────────────────────────────────────────
-                    if (errorMsg != null) ...[
+                    if (_errorMsg != null) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -302,7 +305,7 @@ class LoginScreen extends ConsumerWidget {
                           border: Border.all(color: Colors.red.shade200),
                         ),
                         child: Text(
-                          errorMsg,
+                          _errorMsg!,
                           style: TextStyle(
                             color: Colors.red.shade700,
                             fontSize: 13,
@@ -315,7 +318,7 @@ class LoginScreen extends ConsumerWidget {
 
                     // ── Sign In Button ────────────────────────────────────────
                     _SignInButton(
-                      isLoading: isLoading,
+                      isLoading: _isLoading,
                       onPressed: handleEmailLogin,
                     ),
                     const SizedBox(height: 24),
