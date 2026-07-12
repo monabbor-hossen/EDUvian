@@ -18,6 +18,7 @@ import '../../features/chat/presentation/screens/messages_screen.dart';
 import '../../features/chat/presentation/screens/new_chat_screen.dart';
 import '../../features/routine/presentation/screens/routine_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/splash/presentation/screens/splash_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -25,15 +26,26 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
+      // Auth still initialising → hold on the splash screen
+      if (authState.isLoading) return '/splash';
+
       final User? user = authState.asData?.value;
       final bool isLoggedIn = user != null;
+      final bool onSplash = state.matchedLocation == '/splash';
       final bool goingToAuth =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup';
+
+      // Auth resolved but user is still on splash → send to correct screen
+      if (onSplash) return isLoggedIn ? '/' : '/login';
+
+      // Logged-in user trying to access auth screens → send to home
       if (isLoggedIn && goingToAuth) return '/';
+
       return null;
     },
     routes: [
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login',  builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupScreen()),
 
