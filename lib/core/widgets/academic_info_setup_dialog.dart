@@ -31,12 +31,16 @@ class _AcademicInfoSetupDialog extends StatefulWidget {
 
 class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     with SingleTickerProviderStateMixin {
+  final _dialogKey = GlobalKey();
+  final _formKey = GlobalKey<FormState>();
   late AnimationController _animCtrl;
   late Animation<double> _scaleAnim;
   late Animation<double> _fadeAnim;
 
   final _textController = TextEditingController();
   final _nameController = TextEditingController();
+  final _textFocusNode = FocusNode();
+  final _nameFocusNode = FocusNode();
   bool _saving = false;
   String? _errorText;
   String? _nameErrorText;
@@ -63,6 +67,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     _animCtrl.dispose();
     _textController.dispose();
     _nameController.dispose();
+    _textFocusNode.dispose();
+    _nameFocusNode.dispose();
     super.dispose();
   }
 
@@ -175,6 +181,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Container(
+            key: _dialogKey,
+            constraints: const BoxConstraints(maxWidth: 400),
             decoration: BoxDecoration(
               color: dark ? const Color(0xFF1A0A14) : Colors.white,
               borderRadius: BorderRadius.circular(28),
@@ -195,23 +203,31 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(28),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                    child: Column(
-                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                      // ── Icon ───────────────────────────────────────────────
-                      Center(
-                        child: Container(
-                          width: 62,
-                          height: 62,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Container(color: Colors.transparent),
+                    ),
+                  ),
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // ── Icon ───────────────────────────────────────────────
+                            Center(
+                              child: Container(
+                                width: 62,
+                                height: 62,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
                               colors: [
                                 primaryColor,
                                 const Color(0xFF3B1F8F),
@@ -259,13 +275,20 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       if (_needsName) ...[
                         _label('FULL NAME', dark),
                         const SizedBox(height: 8),
-                        TextField(
+                        TextFormField(
+                          key: const ValueKey('nameField'),
                           controller: _nameController,
+                          focusNode: _nameFocusNode,
+                          autofocus: true,
+                          textInputAction: TextInputAction.next,
                           style: GoogleFonts.inter(
                             color: dark ? Colors.white : Colors.black87,
                             fontWeight: FontWeight.w500,
                           ),
-                          textCapitalization: TextCapitalization.words,
+                          keyboardType: TextInputType.text,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          textCapitalization: TextCapitalization.none,
                           decoration: InputDecoration(
                             hintText: 'John Doe',
                             hintStyle: GoogleFonts.inter(
@@ -304,7 +327,9 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           ),
                           onChanged: (val) {
                             if (_nameErrorText != null) {
-                              setState(() => _nameErrorText = null);
+                              setState(() {
+                                _nameErrorText = null;
+                              });
                             }
                           },
                         ),
@@ -314,13 +339,19 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       // ── Single Text Field ──────────────────────────────────
                       _label('ACADEMIC INFO', dark),
                       const SizedBox(height: 8),
-                      TextField(
+                      TextFormField(
+                        key: const ValueKey('infoField'),
                         controller: _textController,
+                        focusNode: _textFocusNode,
+                        textInputAction: TextInputAction.done,
                         style: GoogleFonts.inter(
                           color: dark ? Colors.white : Colors.black87,
                           fontWeight: FontWeight.w500,
                         ),
-                        textCapitalization: TextCapitalization.characters,
+                        keyboardType: TextInputType.text,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textCapitalization: TextCapitalization.none,
                         decoration: InputDecoration(
                           hintText: 'e.g. 7DCSE.2',
                           hintStyle: GoogleFonts.inter(
@@ -358,88 +389,98 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           ),
                         ),
                         onChanged: (val) {
-                          setState(() {
-                            if (_errorText != null) {
+                          if (_errorText != null) {
+                            setState(() {
                               _errorText = null;
-                            }
-                          });
+                            });
+                          }
                         },
                       ),
                       const SizedBox(height: 28),
 
                       // ── Action Buttons ─────────────────────────────────────
-                      Row(
-                        children: [
-                          // Cancel
-                          Expanded(
-                            child: TextButton(
-                              onPressed: _saving
-                                  ? null
-                                  : () => Navigator.of(context).pop(false),
-                              style: TextButton.styleFrom(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14)),
-                              ),
-                              child: Text(
-                                'Skip for now',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      dark ? Colors.white38 : Colors.black38,
+                      AnimatedBuilder(
+                        animation: Listenable.merge([_textController, _nameController]),
+                        builder: (context, child) {
+                          final hasValidInput = _textController.text.trim().isNotEmpty && 
+                              (!_needsName || _nameController.text.trim().isNotEmpty);
+                              
+                          return Row(
+                            children: [
+                              // Cancel
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: _saving
+                                      ? null
+                                      : () => Navigator.of(context).pop(false),
+                                  style: TextButton.styleFrom(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  child: Text(
+                                    'Skip for now',
+                                    style: GoogleFonts.inter(
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          dark ? Colors.white38 : Colors.black38,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Save
-                          Expanded(
-                            flex: 2,
-                            child: AnimatedOpacity(
-                              opacity: (_textController.text.trim().isNotEmpty && (!_needsName || _nameController.text.trim().isNotEmpty)) ? 1.0 : 0.45,
-                              duration: const Duration(milliseconds: 200),
-                              child: ElevatedButton(
-                                onPressed: (_textController.text.trim().isNotEmpty && (!_needsName || _nameController.text.trim().isNotEmpty) && !_saving) ? _save : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: primaryColor,
-                                  foregroundColor: Colors.white,
-                                  disabledBackgroundColor:
-                                      primaryColor.withValues(alpha: 0.5),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(14)),
-                                  elevation: 4,
-                                  shadowColor:
-                                      primaryColor.withValues(alpha: 0.4),
+                              const SizedBox(width: 12),
+                              // Save
+                              Expanded(
+                                flex: 2,
+                                child: AnimatedOpacity(
+                                  opacity: hasValidInput ? 1.0 : 0.45,
+                                  duration: const Duration(milliseconds: 200),
+                                  child: ElevatedButton(
+                                    onPressed: (hasValidInput && !_saving) ? _save : null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: primaryColor,
+                                      foregroundColor: Colors.white,
+                                      disabledBackgroundColor:
+                                          primaryColor.withValues(alpha: 0.5),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(14)),
+                                      elevation: 4,
+                                      shadowColor:
+                                          primaryColor.withValues(alpha: 0.4),
+                                    ),
+                                    child: _saving
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2.5,
+                                            ),
+                                          )
+                                        : Text(
+                                            'Save & Continue',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                  ),
                                 ),
-                                child: _saving
-                                    ? const SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : Text(
-                                        'Save & Continue',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 14,
-                                        ),
-                                      ),
                               ),
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        }
                       ),
                     ],
                   ),
                 ),
                 ),
+                ),
+                ],
               ),
             ),
           ),
@@ -459,62 +500,3 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
       );
 }
 
-class PickerDropdown<T> extends StatelessWidget {
-  final bool dark;
-  final String hint;
-  final T? value;
-  final List<DropdownMenuItem<T>> items;
-  final ValueChanged<T?> onChanged;
-
-  const PickerDropdown({
-    super.key,
-    required this.dark,
-    required this.hint,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: dark
-            ? Colors.white.withValues(alpha: 0.06)
-            : Colors.black.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: dark
-              ? Colors.white.withValues(alpha: 0.12)
-              : Colors.black.withValues(alpha: 0.1),
-          width: 1.2,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value,
-          isExpanded: true,
-          dropdownColor: dark ? const Color(0xFF24101C) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          icon: Icon(Icons.keyboard_arrow_down_rounded,
-              color: dark ? Colors.white54 : primaryColor.withValues(alpha: 0.7)),
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: dark ? Colors.white : const Color(0xFF1A0A14),
-          ),
-          hint: Text(
-            hint,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: dark ? Colors.white30 : Colors.black38,
-            ),
-          ),
-          items: items,
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-}
