@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/chat_group_model.dart';
 import '../models/chat_message_model.dart';
+import '../../../../core/services/notification_service.dart';
 
 abstract class ChatRemoteDataSource {
   String? get currentUid;
@@ -93,6 +94,40 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'lastTimestamp': FieldValue.serverTimestamp(),
       'lastMessageTime': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+
+    // Dispatch push notifications to other participants
+    try {
+      final chatDoc = await _db.collection('chats').doc(sectionId).get();
+      if (chatDoc.exists) {
+        final chatData = chatDoc.data()!;
+        final participants = List<String>.from(chatData['participants'] ?? []);
+        final mutedBy = List<String>.from(chatData['mutedBy'] ?? []);
+        
+        final chatType = chatData['type'] ?? '';
+        final chatName = chatData['name'] ?? '';
+        
+        String title = currentDisplayName;
+        if ((chatType == 'custom' || chatType == 'section') && chatName.isNotEmpty) {
+          title = '$currentDisplayName ($chatName)';
+        } else if (chatType == 'section') {
+          title = '$currentDisplayName (Class Group)';
+        }
+        
+        final notificationService = NotificationService();
+        for (final p in participants) {
+          if (p != user.uid && !mutedBy.contains(p)) {
+            // Fire and forget
+            notificationService.sendNotificationToTopic(
+              title: title,
+              body: trimmed,
+              topicName: 'user_$p',
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore notification failures to not block message sending
+    }
   }
 
   @override

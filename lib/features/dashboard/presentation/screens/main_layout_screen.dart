@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
 import '../../../../core/widgets/academic_info_setup_dialog.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/providers/layout_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../routine/presentation/providers/routine_providers.dart';
@@ -84,6 +85,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
     authAsync.whenData((user) {
       if (user != null) {
         _scheduleDialogIfNeeded(user.uid);
+        NotificationService().subscribeToUserTopic(user.uid);
       } else {
         // Reset state on logout so it triggers again on next login
         _dialogPending = false;

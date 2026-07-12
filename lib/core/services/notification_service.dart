@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -91,8 +92,23 @@ class NotificationService {
       if (enabled && info.isNotEmpty) {
         await subscribeToBatchTopic(info);
       }
+      
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        await subscribeToUserTopic(uid);
+      }
     } catch (e) {
       debugPrint('Error on notification initialization auto-subscribe: $e');
+    }
+  }
+  
+  /// Subscribes to a unique user topic for direct messages
+  Future<void> subscribeToUserTopic(String uid) async {
+    try {
+      await _fcm.subscribeToTopic('user_$uid').timeout(const Duration(seconds: 5));
+      debugPrint("Subscribed to user topic: user_$uid");
+    } catch (e) {
+      debugPrint("Error subscribing to user topic user_$uid: $e");
     }
   }
 
