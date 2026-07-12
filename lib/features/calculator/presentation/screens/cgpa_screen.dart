@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -10,7 +9,6 @@ import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/rounded_field.dart';
 import '../../../../core/widgets/dropdown_field.dart';
 import '../../../../core/widgets/arrow_tooltip.dart';
-import '../../../../core/models/academic_info.dart';
 import '../../domain/entities/subject.dart';
 import '../providers/calculator_providers.dart';
 
@@ -36,20 +34,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
   @override
   void initState() {
     super.initState();
-    _loadDefaults();
-  }
-
-  Future<void> _loadDefaults() async {
-    final prefs = await SharedPreferences.getInstance();
-    final infoString = prefs.getString('academic_info') ?? '';
-    if (infoString.isNotEmpty) {
-      final info = parseAcademicInfo(infoString);
-      if (info != null && ref.read(departmentProvider) == null) {
-        if (department.containsKey(info.department)) {
-          ref.read(departmentProvider.notifier).state = info.department;
-        }
-      }
-    }
+    loadDefaultDepartment(ref);
   }
 
   @override
@@ -283,36 +268,39 @@ class SemesterListView extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    semester['semester'] ?? "Unnamed Semester",
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: isDark(context) ? Colors.white : primaryColor),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark(context) ? Colors.white10 : Colors.grey.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      semester['semester'] ?? "Unnamed Semester",
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: isDark(context) ? Colors.white : primaryColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: isDark(context) ? Colors.white10 : Colors.grey.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text("Credit: ${semester['credit']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: isDark(context) ? Colors.white70 : Colors.black87)),
                         ),
-                        child: Text("Credit: ${semester['credit']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: isDark(context) ? Colors.white70 : Colors.black87)),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: secondaryColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: secondaryColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text("GPA: ${semester['gpa']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: secondaryColor)),
                         ),
-                        child: Text("GPA: ${semester['gpa']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: secondaryColor)),
-                      ),
-                    ],
-                  )
-                ],
+                      ],
+                    )
+                  ],
+                ),
               ),
               IconButton(
                 onPressed: () {

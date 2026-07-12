@@ -9,8 +9,6 @@ import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/rounded_field.dart';
 import '../../../../core/widgets/dropdown_field.dart';
 import '../../../../core/widgets/subject_autocomplete.dart';
-import '../../../../core/models/academic_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/subject.dart';
 import '../providers/calculator_providers.dart';
 
@@ -25,20 +23,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
   @override
   void initState() {
     super.initState();
-    _loadDefaults();
-  }
-
-  Future<void> _loadDefaults() async {
-    final prefs = await SharedPreferences.getInstance();
-    final infoString = prefs.getString('academic_info') ?? '';
-    if (infoString.isNotEmpty) {
-      final info = parseAcademicInfo(infoString);
-      if (info != null && ref.read(departmentProvider) == null) {
-        if (department.containsKey(info.department)) {
-          ref.read(departmentProvider.notifier).state = info.department;
-        }
-      }
-    }
+    loadDefaultDepartment(ref);
   }
 
   @override

@@ -1,7 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/entities/subject.dart';
+import '../../../../core/services/academic_info_service.dart';
 
+Future<void> loadDefaultDepartment(WidgetRef ref) async {
+  final info = await AcademicInfoService.getAcademicInfo();
+  if (info != null && ref.read(departmentProvider) == null) {
+    if (department.containsKey(info.department)) {
+      ref.read(departmentProvider.notifier).state = info.department;
+    }
+  }
+}
 // General providers
 final departmentProvider = StateProvider<String?>((ref) => null);
 final subjectProvider = StateProvider<List<Subject>>((ref) => []);

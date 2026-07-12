@@ -8,6 +8,8 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'academic_info_service.dart';
+
 // ---------------------------------------------------------------------------
 // BACKGROUND MESSAGE HANDLER
 // ---------------------------------------------------------------------------
@@ -85,7 +87,7 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final enabled = prefs.getBool('notifications_enabled') ?? true;
-      final info = prefs.getString('academic_info') ?? '';
+      final info = await AcademicInfoService.getRawAcademicInfo() ?? '';
       if (enabled && info.isNotEmpty) {
         await subscribeToBatchTopic(info);
       }

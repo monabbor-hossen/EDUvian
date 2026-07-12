@@ -40,26 +40,28 @@ class DashboardScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Today's Schedule",
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: dark ? Colors.white : Colors.black87,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Today's Schedule",
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: dark ? Colors.white : Colors.black87,
+                              ),
                             ),
-                          ),
-                          Text(
-                            todayName,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: dark ? Colors.white54 : Colors.black45,
-                              fontWeight: FontWeight.w500,
+                            Text(
+                              todayName,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: dark ? Colors.white54 : Colors.black45,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       GestureDetector(
                         onTap: () => context.go('/routine'),
