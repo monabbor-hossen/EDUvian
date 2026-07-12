@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,3 +24,21 @@ final authStateProvider = StreamProvider<User?>((ref) {
 final authServiceProvider = Provider<AuthRepository>((ref) {
   return ref.watch(authRepositoryProvider);
 });
+
+/// Streams the display name from Firestore so it updates everywhere
+/// immediately after saving — even without a new Firebase Auth event.
+final userNameProvider = StreamProvider<String>((ref) {
+  final authAsync = ref.watch(authStateProvider);
+  final uid = authAsync.asData?.value?.uid;
+  if (uid == null) return Stream.value('');
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .snapshots()
+      .map((snap) {
+    final name = snap.data()?['name'] as String? ?? '';
+    return name.isNotEmpty ? name : (FirebaseAuth.instance.currentUser?.displayName ?? '');
+  });
+});
+

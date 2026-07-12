@@ -36,8 +36,11 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
   late Animation<double> _fadeAnim;
 
   final _textController = TextEditingController();
+  final _nameController = TextEditingController();
   bool _saving = false;
   String? _errorText;
+  String? _nameErrorText;
+  bool _needsName = false;
 
   @override
   void initState() {
@@ -48,27 +51,50 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
         parent: _animCtrl, curve: Curves.easeOutBack);
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && (user.displayName == null || user.displayName!.trim().isEmpty)) {
+      _needsName = true;
+    }
   }
 
   @override
   void dispose() {
     _animCtrl.dispose();
     _textController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     final raw = _textController.text.trim().toUpperCase();
+    final name = _nameController.text.trim();
+    
     if (raw.isEmpty) return;
+    if (_needsName && name.isEmpty) return;
 
+    bool hasError = false;
+    
     if (parseAcademicInfo(raw) == null) {
       setState(() => _errorText = 'Invalid format. Use e.g. 7DCSE.2');
-      return;
+      hasError = true;
+    } else {
+      setState(() => _errorText = null);
     }
+    
+    if (_needsName && name.isEmpty) {
+      setState(() => _nameErrorText = 'Name is required');
+      hasError = true;
+    } else {
+      setState(() => _nameErrorText = null);
+    }
+    
+    if (hasError) return;
 
     setState(() {
       _saving = true;
       _errorText = null;
+      _nameErrorText = null;
     });
 
     final prefs = await SharedPreferences.getInstance();
@@ -84,9 +110,19 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
     final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
     if (uid != null) {
       try {
+        if (_needsName && name.isNotEmpty) {
+          await FirebaseAuth.instance.currentUser?.updateDisplayName(name);
+          await FirebaseAuth.instance.currentUser?.reload();
+        }
+        
         final dataToSave = <String, dynamic>{
           'academic_info': raw,
         };
+        
+        if (_needsName && name.isNotEmpty) {
+          dataToSave['name'] = name;
+        }
+        
         if (info != null) {
           // Determine shift from email (ends with 'e' before domain = Evening)
           final localPart = userEmail.split('@').first.toLowerCase();
@@ -219,6 +255,62 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       ),
                       const SizedBox(height: 24),
 
+                      // ── Name Field (Optional) ───────────────────────────────
+                      if (_needsName) ...[
+                        _label('FULL NAME', dark),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _nameController,
+                          style: GoogleFonts.inter(
+                            color: dark ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                          decoration: InputDecoration(
+                            hintText: 'John Doe',
+                            hintStyle: GoogleFonts.inter(
+                              color: dark ? Colors.white38 : Colors.black38,
+                            ),
+                            errorText: _nameErrorText,
+                            filled: true,
+                            fillColor: dark
+                                ? Colors.white.withValues(alpha: 0.06)
+                                : Colors.black.withValues(alpha: 0.04),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(
+                                color: dark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.black.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(
+                                color: dark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.black.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide(
+                                color: primaryColor.withValues(alpha: 0.5),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          onChanged: (val) {
+                            if (_nameErrorText != null) {
+                              setState(() => _nameErrorText = null);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+
                       // ── Single Text Field ──────────────────────────────────
                       _label('ACADEMIC INFO', dark),
                       const SizedBox(height: 8),
@@ -305,10 +397,10 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           Expanded(
                             flex: 2,
                             child: AnimatedOpacity(
-                              opacity: _textController.text.trim().isNotEmpty ? 1.0 : 0.45,
+                              opacity: (_textController.text.trim().isNotEmpty && (!_needsName || _nameController.text.trim().isNotEmpty)) ? 1.0 : 0.45,
                               duration: const Duration(milliseconds: 200),
                               child: ElevatedButton(
-                                onPressed: (_textController.text.trim().isNotEmpty && !_saving) ? _save : null,
+                                onPressed: (_textController.text.trim().isNotEmpty && (!_needsName || _nameController.text.trim().isNotEmpty) && !_saving) ? _save : null,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryColor,
                                   foregroundColor: Colors.white,

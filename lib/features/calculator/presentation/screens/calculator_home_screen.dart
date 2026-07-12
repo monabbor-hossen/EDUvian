@@ -64,8 +64,9 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 30),
                 Expanded(
                   child: ListView(
+                    clipBehavior: Clip.none,
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 10, bottom: 100),
+                    padding: const EdgeInsets.only(top: 24, bottom: 120),
                     children: [
                       _CalculatorCard(
                         icon: Icons.attach_money_rounded,
@@ -104,6 +105,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
+
 
 class _CalculatorCard extends StatefulWidget {
   final IconData icon;

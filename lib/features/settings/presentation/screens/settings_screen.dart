@@ -108,6 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final authState = ref.watch(authStateProvider);
     final user = authState.asData?.value;
     final isLoggedIn = user != null;
+    final userName = ref.watch(userNameProvider).valueOrNull ?? '';
 
     ref.listen<AsyncValue<String>>(academicInfoProvider, (previous, next) {
       final newInfo = next.valueOrNull;
@@ -162,7 +163,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               backgroundColor: primaryColor.withValues(alpha: 0.1),
                               backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
                               child: user.photoURL == null ? Text(
-                                user.displayName?.isNotEmpty == true ? user.displayName![0].toUpperCase() : 'U',
+                                userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
                                 style: GoogleFonts.poppins(color: primaryColor, fontSize: 24, fontWeight: FontWeight.bold),
                               ) : null,
                             ),
@@ -200,7 +201,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          user.displayName?.isNotEmpty == true ? user.displayName! : 'User',
+                                          userName.isNotEmpty ? userName : 'User',
                                           style: GoogleFonts.poppins(
                                             color: dark ? Colors.white : Colors.black87,
                                             fontWeight: FontWeight.bold,
@@ -244,8 +245,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     }
                                     return;
                                   }
-                                  if (_nameController.text.trim().isNotEmpty) {
-                                    await user.updateDisplayName(_nameController.text.trim());
+                                  final newName = _nameController.text.trim();
+                                  if (newName.isNotEmpty) {
+                                    await user.updateDisplayName(newName);
+                                    await user.reload();
+                                    // Persist to Firestore so userNameProvider updates in real-time
+                                    final uid = user.uid;
+                                    try {
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(uid)
+                                          .set({'name': newName}, SetOptions(merge: true));
+                                    } catch (_) {}
                                   }
                                   if (raw.isNotEmpty) {
                                     await _saveAcademicInfo(raw);
@@ -254,7 +265,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   // ignore: unused_result
                                   ref.refresh(authStateProvider);
                                 } else {
-                                  _nameController.text = user.displayName ?? '';
+                                  _nameController.text = userName;
                                   _academicController.text = _academicInfo;
                                 }
                                 setState(() {
