@@ -21,7 +21,7 @@ abstract class ChatRepository {
   });
   Future<String> createCustomGroup(String name, List<Map<String, dynamic>> selectedUsers);
 
-  Stream<List<ChatMessage>> streamMessages(String sectionId);
+  Stream<List<ChatMessage>> streamMessages(String sectionId, {int limit = 50});
   Stream<List<Map<String, dynamic>>> streamMembers(String sectionId);
   Stream<List<ChatGroup>> streamUserChats();
 

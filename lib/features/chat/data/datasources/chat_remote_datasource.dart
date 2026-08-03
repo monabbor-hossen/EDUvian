@@ -25,7 +25,7 @@ abstract class ChatRemoteDataSource {
   });
   Future<String> createCustomGroup(String name, List<Map<String, dynamic>> selectedUsers);
 
-  Stream<List<ChatMessageModel>> streamMessages(String sectionId);
+  Stream<List<ChatMessageModel>> streamMessages(String sectionId, {int limit = 50});
   Stream<List<Map<String, dynamic>>> streamMembers(String sectionId);
   Stream<List<ChatGroupModel>> streamUserChats();
 
@@ -378,14 +378,17 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }
 
   @override
-  Stream<List<ChatMessageModel>> streamMessages(String sectionId) {
+  Stream<List<ChatMessageModel>> streamMessages(String sectionId, {int limit = 50}) {
     return _db
         .collection('chats')
         .doc(sectionId)
         .collection('messages')
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true) // Get the newest messages
+        .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs.map(ChatMessageModel.fromFirestore).toList());
+        .map((snap) => snap.docs
+            .map(ChatMessageModel.fromFirestore)
+            .toList());
   }
 
   @override

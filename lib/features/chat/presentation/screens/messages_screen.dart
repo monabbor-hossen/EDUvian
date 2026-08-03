@@ -986,6 +986,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       final hasText = _msgCtrl.text.trim().isNotEmpty;
       if (hasText != _hasText) setState(() => _hasText = hasText);
     });
+
+    _scrollCtrl.addListener(() {
+      // Since the list is reversed, scrolling UP (to older messages) means
+      // approaching maxScrollExtent.
+      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200) {
+        // We might get a few redundant bumps, but it's fine for simple pagination.
+        ref.read(messageLimitProvider.notifier).update((state) => state + 50);
+      }
+    });
+
     // Hide bottom nav bar smoothly when chat room opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(navBarVisibleProvider.notifier).state = false;
@@ -1020,7 +1030,13 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     } else {
       // Send new message
       await _chatService.sendMessage(widget.sectionId, text);
-      _scrollToBottom();
+      if (_scrollCtrl.hasClients) {
+        _scrollCtrl.animateTo(
+          0.0, // Scroll to bottom of reversed list
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     }
 
     setState(() => _sending = false);
@@ -1119,17 +1135,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   }
 
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollCtrl.hasClients) {
-        _scrollCtrl.animateTo(
-          _scrollCtrl.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
+  // _scrollToBottom removed because reverse: true naturally handles it
 
   @override
   Widget build(BuildContext context) {
@@ -1303,6 +1309,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         ),
 
         body: messagesAsync.when(
+          skipLoadingOnReload: true,
           loading: () => const Center(
             child: CircularProgressIndicator(color: primaryColor),
           ),
@@ -1314,34 +1321,34 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             if (messages.isEmpty) {
               return _EmptyChat(dark: dark);
             }
-            // Auto-scroll only when the user is already near the bottom
-            // so we don't hijack their scroll while they're reading history
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (_scrollCtrl.hasClients) {
-                final pos = _scrollCtrl.position;
-                final nearBottom = pos.maxScrollExtent - pos.pixels < 200;
-                if (nearBottom) _scrollToBottom();
-              }
-            });
+            // No auto-scroll logic needed on load because reverse: true anchors to the bottom automatically!
 
             return ListView.builder(
               controller: _scrollCtrl,
+              reverse: true, // Newest messages at bottom, oldest at top
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               itemCount: messages.length,
               itemBuilder: (_, i) {
                 final msg = messages[i];
                 final isMe = msg.senderId == currentUid;
-                final showAvatar = !isMe &&
-                    (i == 0 ||
-                        messages[i - 1].senderId != msg.senderId);
-                final showName = !isMe &&
-                    (i == 0 ||
-                        messages[i - 1].senderId != msg.senderId);
+                
+                // Since reverse: true, i+1 is the older message (visually ABOVE)
+                // i-1 is the newer message (visually BELOW)
 
-                final isLastInBlock = i == messages.length - 1 ||
-                    messages[i + 1].senderId != msg.senderId ||
-                    messages[i + 1].timestamp.difference(msg.timestamp).inMinutes >= 5;
+                // Show name/avatar if there is no older message (i is the oldest in the list)
+                // or if the older message (i+1) has a different sender.
+                final showName = !isMe &&
+                    (i == messages.length - 1 || messages[i + 1].senderId != msg.senderId);
+                final showAvatar = showName;
+
+                // Time is shown at the bottom of a block.
+                // It's the bottom if there is no newer message (i == 0)
+                // or if the newer message (i-1) has a different sender
+                // or if there is a 5+ minute gap.
+                final isLastInBlock = i == 0 ||
+                    messages[i - 1].senderId != msg.senderId ||
+                    messages[i - 1].timestamp.difference(msg.timestamp).inMinutes.abs() >= 5;
 
                 return _MessageBubble(
                   key: ValueKey('\${msg.id}_\${msg.text}_\${msg.edited}'),

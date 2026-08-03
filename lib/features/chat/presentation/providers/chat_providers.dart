@@ -37,11 +37,15 @@ final sectionIdProvider = FutureProvider<String?>((ref) async {
   return upper;
 });
 
-/// Streams messages for a given section, ordered oldest → newest.
+/// Holds the current message limit for pagination.
+final messageLimitProvider = StateProvider.autoDispose<int>((ref) => 50);
+
+/// Streams messages for a given section, ordered oldest → newest, up to the current limit.
 final chatMessagesProvider =
-    StreamProvider.family<List<ChatMessage>, String>((ref, sectionId) {
+    StreamProvider.autoDispose.family<List<ChatMessage>, String>((ref, sectionId) {
+  final limit = ref.watch(messageLimitProvider);
   final repository = ref.watch(chatRepositoryProvider);
-  return repository.streamMessages(sectionId);
+  return repository.streamMessages(sectionId, limit: limit);
 });
 
 /// Streams the member list for a given section doc.

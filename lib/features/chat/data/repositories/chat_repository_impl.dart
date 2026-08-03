@@ -64,8 +64,8 @@ class ChatRepositoryImpl implements ChatRepository {
   }
 
   @override
-  Stream<List<ChatMessage>> streamMessages(String sectionId) {
-    return _remoteDataSource.streamMessages(sectionId).map((list) => list.cast<ChatMessage>());
+  Stream<List<ChatMessage>> streamMessages(String sectionId, {int limit = 50}) {
+    return _remoteDataSource.streamMessages(sectionId, limit: limit).map((list) => list.cast<ChatMessage>());
   }
 
   @override
