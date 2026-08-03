@@ -79,7 +79,6 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = isDark(context);
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
 
     final authAsync = ref.watch(authStateProvider);
     authAsync.whenData((user) {

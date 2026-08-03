@@ -1144,10 +1144,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     // Use FirebaseAuth directly — most reliable source for the current user's uid
     final currentUid = FirebaseAuth.instance.currentUser?.uid;
 
-    return WillPopScope(
-      onWillPop: () async {
-        ref.read(navBarVisibleProvider.notifier).state = true;
-        return true;
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          try {
+            ref.read(navBarVisibleProvider.notifier).state = true;
+          } catch (_) {}
+        }
       },
       child: AppBackground(
         bottomSafe: false,

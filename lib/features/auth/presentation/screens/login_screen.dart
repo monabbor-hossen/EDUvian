@@ -59,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
 
       try {
-        final result = await ref.read(authServiceProvider).signInWithEmail(email, pass);
+        await ref.read(authServiceProvider).signInWithEmail(email, pass);
         // Clear old session cache so MainLayout fetches fresh data from Firestore
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('academic_info');

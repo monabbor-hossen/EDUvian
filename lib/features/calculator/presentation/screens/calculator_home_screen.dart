@@ -7,16 +7,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    final user = authState.asData?.value;
-    final isLoggedIn = user != null;
 
     return AppBackground(
       child: Scaffold(
@@ -177,7 +173,11 @@ class _CalculatorCardState extends State<_CalculatorCard> {
       },
       child: AnimatedContainer(
         duration: 200.ms,
-        transform: Matrix4.identity()..scale(_isHovered ? 0.98 : 1.0),
+        transform: Matrix4.diagonal3Values(
+          _isHovered ? 0.98 : 1.0,
+          _isHovered ? 0.98 : 1.0,
+          1.0,
+        ),
         margin: const EdgeInsets.only(top: 10),
         child: Stack(
           clipBehavior: Clip.none,
