@@ -5,6 +5,7 @@ class ChatMessage {
   final String senderEmail;
   final String text;
   final DateTime timestamp;
+  final bool edited;
 
   const ChatMessage({
     required this.id,
@@ -13,6 +14,7 @@ class ChatMessage {
     required this.senderEmail,
     required this.text,
     required this.timestamp,
+    this.edited = false,
   });
 
   /// Returns two-letter initials from the sender's name or email.
@@ -26,3 +28,4 @@ class ChatMessage {
     return '?';
   }
 }
+

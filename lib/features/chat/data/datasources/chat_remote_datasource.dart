@@ -32,6 +32,9 @@ abstract class ChatRemoteDataSource {
   Future<void> muteGroup(String groupId, bool mute);
   Future<void> leaveGroup(String groupId);
   Future<void> deleteGroup(String groupId);
+
+  Future<void> deleteMessage(String sectionId, String messageId);
+  Future<void> editMessage(String sectionId, String messageId, String newText);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -345,6 +348,33 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   @override
   Future<void> deleteGroup(String groupId) async {
     await _db.collection('chats').doc(groupId).delete();
+  }
+
+  @override
+  Future<void> deleteMessage(String sectionId, String messageId) async {
+    await _db
+        .collection('chats')
+        .doc(sectionId)
+        .collection('messages')
+        .doc(messageId)
+        .delete();
+  }
+
+  @override
+  Future<void> editMessage(
+      String sectionId, String messageId, String newText) async {
+    final trimmed = newText.trim();
+    if (trimmed.isEmpty) return;
+    await _db
+        .collection('chats')
+        .doc(sectionId)
+        .collection('messages')
+        .doc(messageId)
+        .update({
+      'text': trimmed,
+      'edited': true,
+      'editedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override

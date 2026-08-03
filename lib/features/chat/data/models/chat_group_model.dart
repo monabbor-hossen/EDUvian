@@ -11,6 +11,7 @@ class ChatGroupModel extends ChatGroup {
     required super.memberIds,
     required super.lastMessage,
     required super.lastSenderName,
+    super.lastSenderId = '',
     super.lastTimestamp,
     super.mutedBy = const [],
   });
@@ -74,6 +75,7 @@ class ChatGroupModel extends ChatGroup {
       memberIds: memberIds,
       lastMessage: data['lastMessage'] as String? ?? '',
       lastSenderName: data['lastSenderName'] as String? ?? '',
+      lastSenderId: data['lastSenderId'] as String? ?? '',
       lastTimestamp: (data['lastTimestamp'] as Timestamp? ?? data['lastMessageTime'] as Timestamp?)?.toDate(),
       mutedBy: List<String>.from(data['mutedBy'] ?? []),
     );

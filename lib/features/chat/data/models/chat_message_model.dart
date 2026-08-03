@@ -10,6 +10,7 @@ class ChatMessageModel extends ChatMessage {
     required super.senderEmail,
     required super.text,
     required super.timestamp,
+    super.edited = false,
   });
 
   factory ChatMessageModel.fromFirestore(DocumentSnapshot doc) {
@@ -21,6 +22,7 @@ class ChatMessageModel extends ChatMessage {
       senderEmail: data['senderEmail'] as String? ?? '',
       text: data['text'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      edited: data['edited'] as bool? ?? false,
     );
   }
 
@@ -30,5 +32,7 @@ class ChatMessageModel extends ChatMessage {
         'senderEmail': senderEmail,
         'text': text,
         'timestamp': Timestamp.fromDate(timestamp),
+        'edited': edited,
       };
 }
+

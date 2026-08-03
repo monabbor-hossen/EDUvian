@@ -28,4 +28,7 @@ abstract class ChatRepository {
   Future<void> muteGroup(String groupId, bool mute);
   Future<void> leaveGroup(String groupId);
   Future<void> deleteGroup(String groupId);
+
+  Future<void> deleteMessage(String sectionId, String messageId);
+  Future<void> editMessage(String sectionId, String messageId, String newText);
 }

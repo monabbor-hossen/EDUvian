@@ -92,4 +92,14 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<void> deleteGroup(String groupId) {
     return _remoteDataSource.deleteGroup(groupId);
   }
+
+  @override
+  Future<void> deleteMessage(String sectionId, String messageId) {
+    return _remoteDataSource.deleteMessage(sectionId, messageId);
+  }
+
+  @override
+  Future<void> editMessage(String sectionId, String messageId, String newText) {
+    return _remoteDataSource.editMessage(sectionId, messageId, newText);
+  }
 }
