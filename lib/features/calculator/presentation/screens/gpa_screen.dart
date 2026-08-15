@@ -41,7 +41,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
           foregroundColor: isDark(context) ? Colors.white : primaryColor,
           title: Text(
             'GPA Calculator',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -54,7 +54,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                 const SizedBox(height: 10),
                 Text(
                   'Select Department',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: isDark(context) ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -123,7 +123,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                               ),
                               child: Text(
                                 subject.Code,
-                                style: GoogleFonts.poppins(
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -139,7 +139,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                                     subject.Title,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
                                       color: isDark(context) ? Colors.white : Colors.black87,
@@ -148,7 +148,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                                   const SizedBox(height: 2),
                                   Text(
                                     "Cr: ${subject.Credit}",
-                                    style: GoogleFonts.inter(
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       fontWeight: FontWeight.w500,
                                       fontSize: 12,
                                       color: isDark(context) ? Colors.white60 : Colors.black54,
@@ -170,14 +170,14 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     value: ref.watch(gradeProvider)[subject.Code],
-                                    hint: Text("Gr", style: GoogleFonts.inter(color: isDark(context) ? Colors.white54 : Colors.black45)),
+                                    hint: Text("Gr", style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white54 : Colors.black45)),
                                     dropdownColor: isDark(context) ? const Color(0xFF2C2C32) : Colors.white,
                                     isExpanded: true,
                                     icon: const Icon(Icons.arrow_drop_down, color: primaryColor),
                                     items: gradeToPoint.keys.map((grade) {
                                       return DropdownMenuItem(
                                         value: grade,
-                                        child: Text(grade, style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: isDark(context) ? Colors.white : Colors.black87)),
+                                        child: Text(grade, style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, color: isDark(context) ? Colors.white : Colors.black87)),
                                       );
                                     }).toList(),
                                     onChanged: (value) {
@@ -215,7 +215,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                       children: [
                         Text(
                           "Total GPA",
-                          style: GoogleFonts.poppins(
+                          style: Theme.of(context).textTheme.titleLarge!.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: isDark(context) ? Colors.white70 : Colors.black54,
@@ -223,7 +223,7 @@ class _GpaCalculationState extends ConsumerState<GpaCalculation> {
                         ),
                         Text(
                           gpa.toStringAsFixed(2),
-                          style: GoogleFonts.poppins(
+                          style: Theme.of(context).textTheme.titleLarge!.copyWith(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: isDark(context) ? Colors.white : primaryColor,

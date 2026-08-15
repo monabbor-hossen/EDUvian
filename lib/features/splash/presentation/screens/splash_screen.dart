@@ -213,7 +213,7 @@ class _SplashScreenState extends State<SplashScreen>
                 // App name
                 Text(
                   'EDUvian',
-                  style: GoogleFonts.poppins(
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,
                     color: dark ? Colors.white : primaryColor,
@@ -227,10 +227,10 @@ class _SplashScreenState extends State<SplashScreen>
                 // Tagline
                 Text(
                   'Your Academic Companion',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: dark ? Colors.white54 : Colors.black45,
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     letterSpacing: 0.5,
                   ),
                 ).animate().fadeIn(delay: 350.ms, duration: 500.ms),
@@ -259,10 +259,10 @@ class _SplashScreenState extends State<SplashScreen>
                 // Loading label
                 Text(
                   'Loading...',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: dark ? Colors.white38 : Colors.black38,
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                     letterSpacing: 1.0,
                   ),
                 ).animate().fadeIn(delay: 600.ms, duration: 400.ms),

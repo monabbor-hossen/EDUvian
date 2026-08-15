@@ -253,7 +253,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       Text(
                         'Set Up Your Profile',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: dark ? Colors.white : const Color(0xFF1A0A14),
@@ -263,10 +263,10 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                       Text(
                         'Enter your academic info to personalise your routine. You can change this anytime in Settings.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 13,
                           height: 1.5,
-                          color: dark ? Colors.white54 : Colors.black45,
+                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -281,8 +281,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           focusNode: _nameFocusNode,
                           autofocus: true,
                           textInputAction: TextInputAction.next,
-                          style: GoogleFonts.inter(
-                            color: dark ? Colors.white : Colors.black87,
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
                           ),
                           keyboardType: TextInputType.text,
@@ -291,8 +291,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           textCapitalization: TextCapitalization.none,
                           decoration: InputDecoration(
                             hintText: 'John Doe',
-                            hintStyle: GoogleFonts.inter(
-                              color: dark ? Colors.white38 : Colors.black38,
+                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                             ),
                             errorText: _nameErrorText,
                             filled: true,
@@ -344,8 +344,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                         controller: _textController,
                         focusNode: _textFocusNode,
                         textInputAction: TextInputAction.done,
-                        style: GoogleFonts.inter(
-                          color: dark ? Colors.white : Colors.black87,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w500,
                         ),
                         keyboardType: TextInputType.text,
@@ -354,8 +354,8 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                         textCapitalization: TextCapitalization.none,
                         decoration: InputDecoration(
                           hintText: 'e.g. 7DCSE.2',
-                          hintStyle: GoogleFonts.inter(
-                            color: dark ? Colors.white38 : Colors.black38,
+                          hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                           ),
                           errorText: _errorText,
                           filled: true,
@@ -421,10 +421,10 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                                   ),
                                   child: Text(
                                     'Skip for now',
-                                    style: GoogleFonts.inter(
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color:
-                                          dark ? Colors.white38 : Colors.black38,
+                                          Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                                     ),
                                   ),
                                 ),
@@ -463,7 +463,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                                           )
                                         : Text(
                                             'Save & Continue',
-                                            style: GoogleFonts.poppins(
+                                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 14,
                                             ),
@@ -491,11 +491,11 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
 
   Widget _label(String text, bool dark) => Text(
         text,
-        style: GoogleFonts.inter(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
-          color: dark ? Colors.white54 : Colors.black45,
+          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
         ),
       );
 }

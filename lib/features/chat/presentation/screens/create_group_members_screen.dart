@@ -131,7 +131,7 @@ class _CreateGroupMembersScreenState
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
         title: Text('Add Group Members',
-            style: GoogleFonts.inter(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [
@@ -165,10 +165,10 @@ class _CreateGroupMembersScreenState
               child: TextField(
                 controller: _searchCtrl,
                 onChanged: _onSearchChanged,
-                style: GoogleFonts.inter(color: textColor),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor),
                 decoration: InputDecoration(
                   hintText: 'Search',
-                  hintStyle: GoogleFonts.inter(color: subtitleColor),
+                  hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor),
                   prefixIcon: Icon(Icons.search, color: textColor),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -200,7 +200,7 @@ class _CreateGroupMembersScreenState
                               radius: 28,
                               backgroundColor: _avatarColor(user['uid'] as String),
                               child: Text(_initials(name),
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold)),
                             ),
@@ -226,7 +226,7 @@ class _CreateGroupMembersScreenState
                           width: 60,
                           child: Text(
                             name.split(' ').first,
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 color: textColor,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500),
@@ -248,7 +248,7 @@ class _CreateGroupMembersScreenState
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: headerColor,
             child: Text('On the platform',
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: subtitleColor,
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
@@ -275,7 +275,7 @@ class _CreateGroupMembersScreenState
                                 horizontal: 16, vertical: 4),
                             color: headerColor,
                             child: Text(initial,
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     color: subtitleColor,
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold)),
@@ -295,17 +295,17 @@ class _CreateGroupMembersScreenState
                                 backgroundColor:
                                     _avatarColor(user['uid'] as String),
                                 child: Text(_initials(name),
-                                    style: GoogleFonts.inter(
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold)),
                               ),
                               title: Text(name,
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       color: textColor,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 15)),
                               subtitle: Text(email,
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       color: subtitleColor, fontSize: 13)),
                               trailing: isSelected
                                   ? const Icon(Icons.check_circle,

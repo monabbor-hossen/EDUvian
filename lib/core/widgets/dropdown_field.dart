@@ -27,13 +27,13 @@ class DropdownField extends ConsumerWidget {
       decoration: inputDecoration(),
       dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
       icon: Icon(Icons.keyboard_arrow_down_rounded, color: dark ? Colors.white70 : primaryColor),
-      style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600),
+      style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600),
       borderRadius: BorderRadius.circular(16),
       items: [
         if (hintText != null)
           DropdownMenuItem<String>(
             value: null,
-            child: Text(hintText!, style: TextStyle(color: dark ? Colors.white54 : Colors.black45)),
+            child: Text(hintText!, style: TextStyle(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted)),
           ),
         ...item.map((value) {
           return DropdownMenuItem<String>(value: value, child: Text(value));
@@ -51,7 +51,7 @@ class DropdownField extends ConsumerWidget {
 
 InputDecoration fieldDecoration(BuildContext context, {String? hint, IconData? icon}) => InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.inter(color: isDark(context) ? Colors.white54 : Colors.black45),
+      hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white54 : Colors.black45),
       prefixIcon: icon != null ? Icon(icon, color: primaryColor.withValues(alpha: 0.7)) : null,
       border: InputBorder.none,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

@@ -97,7 +97,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
         iconTheme: IconThemeData(color: textColor),
         title: Text(
           'New Chat',
-          style: GoogleFonts.inter(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
             color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -124,10 +124,10 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                   child: TextField(
                     controller: _searchCtrl,
                     onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-                    style: GoogleFonts.inter(color: textColor),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor),
                     decoration: InputDecoration(
                       hintText: 'Search Classmates',
-                      hintStyle: GoogleFonts.inter(color: subtitleColor),
+                      hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor),
                       prefixIcon: Icon(Icons.search, color: textColor),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -144,7 +144,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                 ),
                 title: Text(
                   'Create New Group',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontWeight: FontWeight.w600,
                     color: textColor,
                   ),
@@ -167,7 +167,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                       child: Text(
                         'Failed to load classmates. Make sure you entered your academic info first!',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(color: Colors.red),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.red),
                       ),
                     ),
                   ),
@@ -182,7 +182,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                       return Center(
                         child: Text(
                           _searchQuery.isEmpty ? 'No classmates found.' : 'No matching classmates.',
-                          style: GoogleFonts.inter(color: subtitleColor),
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor),
                         ),
                       );
                     }
@@ -211,7 +211,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                               color: headerColor,
                               child: Text(
                                 initial,
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   color: subtitleColor,
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -227,7 +227,7 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                                   backgroundColor: _avatarColor(c['uid'] as String? ?? ''),
                                   child: Text(
                                     _initials(name),
-                                    style: GoogleFonts.inter(
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -235,14 +235,14 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
                                 ),
                                 title: Text(
                                   name,
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: textColor,
                                   ),
                                 ),
                                 subtitle: Text(
                                   email,
-                                  style: GoogleFonts.inter(color: subtitleColor, fontSize: 12),
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor, fontSize: 12),
                                 ),
                                 onTap: () => _startDirectChat(c),
                               );

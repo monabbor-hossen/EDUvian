@@ -98,7 +98,7 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: textColor),
         title: Text('Name of Group Chat',
-            style: GoogleFonts.inter(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 color: textColor, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         actions: [
@@ -133,16 +133,16 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
             ),
             child: Row(
               children: [
-                Text('NAME', style: GoogleFonts.inter(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.bold)),
+                Text('NAME', style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: TextField(
                     controller: _nameCtrl,
                     onChanged: (val) => setState(() {}), // Trigger re-build for checkmark
-                    style: GoogleFonts.inter(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: textColor, fontSize: 16, fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
                       hintText: 'Choose a group chat name',
-                      hintStyle: GoogleFonts.inter(color: subtitleColor, fontSize: 16),
+                      hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: subtitleColor, fontSize: 16),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -158,7 +158,7 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             color: headerColor,
             child: Text('${_members.length} Members',
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: subtitleColor,
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
@@ -179,12 +179,12 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
                     radius: 24,
                     backgroundColor: _avatarColor(user['uid'] as String),
                     child: Text(_initials(name),
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold)),
                   ),
                   title: Text(name,
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           color: textColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 15)),

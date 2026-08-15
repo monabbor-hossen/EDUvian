@@ -23,7 +23,7 @@ class HomeScreen extends ConsumerWidget {
           surfaceTintColor: Colors.transparent,
           title: Text(
             'EDUvian',
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               color: primaryColor,
               fontWeight: FontWeight.bold,
               fontSize: 26,
@@ -41,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Text(
                   "Welcome to your\nAcademic Portal",
-                  style: GoogleFonts.poppins(
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: isDark(context) ? Colors.white : primaryColor,
@@ -51,7 +51,7 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Text(
                   "What would you like to calculate today?",
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 16,
                     color: isDark(context) ? Colors.white70 : Colors.black54,
                     fontWeight: FontWeight.w500,
@@ -215,7 +215,7 @@ class _CalculatorCardState extends State<_CalculatorCard> {
                           children: [
                             Text(
                               widget.label,
-                              style: GoogleFonts.poppins(
+                              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                 color: Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -227,7 +227,7 @@ class _CalculatorCardState extends State<_CalculatorCard> {
                               width: MediaQuery.of(context).size.width * 0.55,
                               child: Text(
                                 widget.description,
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   color: Colors.white.withValues(alpha: 0.75),
                                   fontSize: 12,
                                   height: 1.25,
@@ -248,7 +248,7 @@ class _CalculatorCardState extends State<_CalculatorCard> {
                             const SizedBox(width: 6),
                             Text(
                               footerText,
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

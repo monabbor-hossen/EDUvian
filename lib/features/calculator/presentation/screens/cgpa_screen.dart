@@ -56,7 +56,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
           foregroundColor: isDark(context) ? Colors.white : primaryColor,
           title: Text(
             'CGPA Calculator',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -69,7 +69,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                 const SizedBox(height: 10),
                 Text(
                   'Add Semester Details',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     color: isDark(context) ? Colors.white : Colors.black87,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -122,7 +122,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                           message: "Enter valid Credit",
                           child: TextField(
                             controller: creditController,
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
                             decoration: fieldDecoration(context, hint: 'Credit', icon: Icons.school_outlined),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onChanged: (value) => ref.read(totalCreditProvider.notifier).state = value,
@@ -139,7 +139,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                           message: "Enter valid GPA",
                           child: TextField(
                             controller: gpaController,
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: isDark(context) ? Colors.white : Colors.black87),
                             decoration: fieldDecoration(context, hint: 'GPA (4.0)', icon: Icons.star_border_rounded),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onChanged: (value) => ref.read(totalGpaProvider.notifier).state = value,
@@ -206,7 +206,7 @@ class _CgpaCalculationState extends ConsumerState<CgpaCalculation> {
                                 child: Center(
                                   child: Text(
                                     "Add",
-                                    style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                 ),
                               ),
@@ -250,7 +250,7 @@ class SemesterListView extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               "No semesters added yet",
-              style: GoogleFonts.inter(color: isDark(context) ? Colors.white54 : Colors.black45, fontWeight: FontWeight.w500),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white54 : Colors.black45, fontWeight: FontWeight.w500),
             ),
           ],
         ).animate().fadeIn(delay: 400.ms),
@@ -274,7 +274,7 @@ class SemesterListView extends ConsumerWidget {
                   children: [
                     Text(
                       semester['semester'] ?? "Unnamed Semester",
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: isDark(context) ? Colors.white : primaryColor),
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold, fontSize: 16, color: isDark(context) ? Colors.white : primaryColor),
                     ),
                     const SizedBox(height: 4),
                     Wrap(
@@ -287,7 +287,7 @@ class SemesterListView extends ConsumerWidget {
                             color: isDark(context) ? Colors.white10 : Colors.grey.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text("Credit: ${semester['credit']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: isDark(context) ? Colors.white70 : Colors.black87)),
+                          child: Text("Credit: ${semester['credit']}", style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 12, fontWeight: FontWeight.w600, color: isDark(context) ? Colors.white70 : Colors.black87)),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -295,7 +295,7 @@ class SemesterListView extends ConsumerWidget {
                             color: secondaryColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text("GPA: ${semester['gpa']}", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: secondaryColor)),
+                          child: Text("GPA: ${semester['gpa']}", style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 12, fontWeight: FontWeight.bold, color: secondaryColor)),
                         ),
                       ],
                     )
@@ -336,7 +336,7 @@ class CgpaResult extends ConsumerWidget {
         children: [
           Text(
             "Overall CGPA",
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: isDark(context) ? Colors.white70 : Colors.black54,
@@ -344,7 +344,7 @@ class CgpaResult extends ConsumerWidget {
           ),
           Text(
             cgpa.toStringAsFixed(2),
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: isDark(context) ? Colors.white : primaryColor,

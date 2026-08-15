@@ -56,7 +56,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
             surfaceTintColor: Colors.transparent,
             title: Text(
               'Class Routine',
-              style: GoogleFonts.poppins(
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                 color: dark ? Colors.white : primaryColor,
                 fontWeight: FontWeight.w700,
                 fontSize: 20,
@@ -81,20 +81,20 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Login Required',
-                      style: GoogleFonts.poppins(
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: dark ? Colors.white : Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Please log in to manage your class routine and schedule.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         height: 1.5,
-                        color: dark ? Colors.white54 : Colors.black45,
+                        color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -110,7 +110,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
                       ),
                       child: Text(
                         'Go to Login',
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -185,9 +185,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-            color: dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.3),
+            color: Theme.of(context).extension<AppColorsExtension>()!.glassBackground,
           ),
         ),
       ),
@@ -195,7 +193,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
         children: [
           Text(
             'Class Routine',
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               color: dark ? Colors.white : primaryColor,
               fontWeight: FontWeight.w700,
               fontSize: 20,
@@ -207,8 +205,8 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
               children: [
                 Text(
                   batchId,
-                  style: GoogleFonts.inter(
-                    color: dark ? Colors.white54 : Colors.black45,
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -223,7 +221,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
                   ),
                   child: Text(
                     'Week ${ClassEntry.weekTypeFor(selectedDate)}',
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: primaryColor,
@@ -248,7 +246,7 @@ class _RoutineManagerScreenState extends ConsumerState<RoutineManagerScreen> {
       foregroundColor: Colors.white,
       icon: const Icon(Icons.add_rounded),
       label: Text('Add Class',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ).animate().slideY(begin: 1, duration: 400.ms, curve: Curves.easeOutBack);
   }
@@ -362,7 +360,7 @@ class _DateScrollerState extends State<_DateScroller> {
             children: [
               Text(
                 '${_monthName(widget.currentMonth.month)} ${widget.currentMonth.year}',
-                style: GoogleFonts.poppins(
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: widget.dark ? Colors.white : primaryColor,
@@ -444,23 +442,23 @@ class _DateScrollerState extends State<_DateScroller> {
                     children: [
                       Text(
                         dayNum.toString(),
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
                           color: isSelected 
                               ? Colors.white 
-                              : (widget.dark ? Colors.white : Colors.black87),
+                              : (widget.Theme.of(context).colorScheme.onSurface),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         abbrev,
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: isSelected 
                               ? Colors.white.withValues(alpha: 0.8) 
-                              : (widget.dark ? Colors.white54 : Colors.black45),
+                              : (widget.Theme.of(context).extension<AppColorsExtension>()!.textMuted),
                         ),
                       ),
                     ],
@@ -593,7 +591,7 @@ class _ClassCard extends ConsumerWidget {
               children: [
                 Icon(Icons.edit_rounded, size: 18, color: dark ? Colors.white70 : primaryColor),
                 const SizedBox(width: 10),
-                Text('Edit details', style: GoogleFonts.inter(fontSize: 14, color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w500)),
+                Text('Edit details', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 14, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -603,7 +601,7 @@ class _ClassCard extends ConsumerWidget {
               children: [
                 Icon(Icons.event_note_rounded, size: 18, color: Colors.orange.shade600),
                 const SizedBox(width: 10),
-                Text('Add day update', style: GoogleFonts.inter(fontSize: 14, color: dark ? Colors.white : Colors.black87, fontWeight: FontWeight.w500)),
+                Text('Add day update', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 14, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -613,7 +611,7 @@ class _ClassCard extends ConsumerWidget {
               children: [
                 const Icon(Icons.delete_rounded, size: 18, color: Colors.redAccent),
                 const SizedBox(width: 10),
-                Text('Delete class', style: GoogleFonts.inter(fontSize: 14, color: Colors.redAccent, fontWeight: FontWeight.w600)),
+                Text('Delete class', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 14, color: Colors.redAccent, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -701,7 +699,7 @@ class _ClassCard extends ConsumerWidget {
                       children: [
                         Text(
                           format12Hour(startTime),
-                          style: GoogleFonts.inter(
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: ongoing ? Colors.white : (dark ? Colors.white70 : primaryColor),
@@ -711,9 +709,9 @@ class _ClassCard extends ConsumerWidget {
                           const SizedBox(height: 2),
                           Text(
                             format12Hour(endTime),
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 11,
-                              color: ongoing ? Colors.white60 : (dark ? Colors.white38 : Colors.black38),
+                              color: ongoing ? Colors.white60 : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                             ),
                           ),
                         ],
@@ -740,13 +738,13 @@ class _ClassCard extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 entry.subject,
-                                style: GoogleFonts.poppins(
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   decoration: (eventText?.toLowerCase().contains('cancel') == true)
                                       ? TextDecoration.lineThrough
                                       : null,
-                                  color: ongoing ? Colors.white : (dark ? Colors.white : Colors.black87),
+                                  color: ongoing ? Colors.white : (Theme.of(context).colorScheme.onSurface),
                                 ),
                               ),
                             ),
@@ -763,7 +761,7 @@ class _ClassCard extends ConsumerWidget {
                                 ),
                                 child: Text(
                                   'Wk ${entry.weekType}',
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
                                     color: ongoing ? Colors.white : primaryColor,
@@ -781,7 +779,7 @@ class _ClassCard extends ConsumerWidget {
                                 ),
                                 child: Text(
                                   'LIVE',
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
@@ -823,7 +821,7 @@ class _ClassCard extends ConsumerWidget {
                                 ),
                                 child: Text(
                                   et,
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700,
                                     color: baseColor,
@@ -864,21 +862,21 @@ class _ClassCard extends ConsumerWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Delete Class',
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               fontWeight: FontWeight.bold,
               color: dark ? Colors.white : primaryColor,
             ),
           ),
           content: Text(
             'Remove "${entry.subject}" from $day?',
-            style: GoogleFonts.inter(
-                color: dark ? Colors.white70 : Colors.black54),
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
               child: Text('Cancel',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w600)),
             ),
@@ -900,7 +898,7 @@ class _ClassCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12)),
               ),
               child: Text('Delete',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -937,7 +935,7 @@ class _InfoRow extends StatelessWidget {
           child: Text(
             label,
             style:
-                GoogleFonts.inter(fontSize: 12, color: color, height: 1.2),
+                Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 12, color: color, height: 1.2),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -967,18 +965,18 @@ class _EmptyDayView extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No classes on $day',
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: dark ? Colors.white54 : Colors.black45,
+              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Tap the + button to add a class.',
-            style: GoogleFonts.inter(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 14,
-              color: dark ? Colors.white38 : Colors.black38,
+              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
             ),
           ),
         ],
@@ -1006,11 +1004,11 @@ class _ErrorView extends StatelessWidget {
                   size: 48, color: Colors.redAccent),
               const SizedBox(height: 12),
               Text('Something went wrong',
-                  style: GoogleFonts.poppins(
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
                       fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
               Text(message,
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 13, color: Colors.grey),
                   textAlign: TextAlign.center),
             ],
           ),
@@ -1138,10 +1136,10 @@ void _showClassActionSheet(
                   children: [
                     Text(
                       'Class Options',
-                      style: GoogleFonts.poppins(
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: dark ? Colors.white : Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -1151,13 +1149,13 @@ void _showClassActionSheet(
                       controller: ctrl,
                       minLines: 2,
                       maxLines: 4,
-                      style: GoogleFonts.inter(
-                        color: dark ? Colors.white : Colors.black87,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Any class update? e.g. "Canceled"',
-                        hintStyle: GoogleFonts.inter(
-                          color: dark ? Colors.white38 : Colors.black38,
+                        hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                         ),
                         filled: true,
                         fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
@@ -1189,7 +1187,7 @@ void _showClassActionSheet(
                         'Online',
                         'Room Change',
                       ].map((text) => ActionChip(
-                        label: Text(text, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                        label: Text(text, style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 11, fontWeight: FontWeight.w600)),
                         backgroundColor: dark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
                         side: BorderSide(color: dark ? Colors.white12 : Colors.black12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -1241,7 +1239,7 @@ void _showClassActionSheet(
                             const Icon(Icons.tune_rounded, size: 18, color: primaryColor),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text('Time & Room Override (Optional)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: dark ? Colors.white70 : Colors.black87)),
+                              child: Text('Time & Room Override (Optional)', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 13, fontWeight: FontWeight.w600, color: dark ? Colors.white70 : Colors.black87)),
                             ),
                             Icon(showOverrides ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 20, color: dark ? Colors.white54 : Colors.black54),
                           ],
@@ -1270,9 +1268,9 @@ void _showClassActionSheet(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text('Custom Time', style: GoogleFonts.inter(fontSize: 10, color: dark ? Colors.white54 : Colors.black54)),
+                                          Text('Custom Time', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 10, color: dark ? Colors.white54 : Colors.black54)),
                                           const SizedBox(height: 2),
-                                          Text(overrideStartTime != null ? format12Hour(overrideStartTime!) : 'Keep Original', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: overrideStartTime != null ? primaryColor : (dark ? Colors.white : Colors.black87))),
+                                          Text(overrideStartTime != null ? format12Hour(overrideStartTime!) : 'Keep Original', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold, color: overrideStartTime != null ? primaryColor : (Theme.of(context).colorScheme.onSurface))),
                                         ],
                                       ),
                                     ),
@@ -1299,10 +1297,10 @@ void _showClassActionSheet(
                       TextField(
                         controller: roomCtrl,
                         focusNode: roomFocus,
-                        style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                         decoration: InputDecoration(
                           hintText: 'New Room (e.g. "Online")',
-                          hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                          hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                           filled: true,
                           fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1340,7 +1338,7 @@ void _showClassActionSheet(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               ),
-                              child: Text('Clear', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                              child: Text('Clear', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold)),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1355,7 +1353,7 @@ void _showClassActionSheet(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
-                            child: Text('Save Status', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                            child: Text('Save Status', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ],
@@ -1547,10 +1545,10 @@ class _ClassDialogState extends State<_ClassDialog> {
 
             Text(
               isEdit ? 'Edit Class' : 'Add New Class',
-              style: GoogleFonts.poppins(
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
-                color: dark ? Colors.white : Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1559,9 +1557,9 @@ class _ClassDialogState extends State<_ClassDialog> {
               isEdit
                   ? 'Update the details of this class'
                   : 'Fill in the details to add a new class',
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
-                color: dark ? Colors.white54 : Colors.black45,
+                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
               ),
               textAlign: TextAlign.center,
             ),
@@ -1577,10 +1575,10 @@ class _ClassDialogState extends State<_ClassDialog> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         'Day',
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: dark ? Colors.white54 : Colors.black45,
+                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                         ),
                       ),
                     ),
@@ -1614,7 +1612,7 @@ class _ClassDialogState extends State<_ClassDialog> {
                               ),
                               child: Text(
                                   abbrev,
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                   color: isSelected
@@ -1676,10 +1674,10 @@ class _ClassDialogState extends State<_ClassDialog> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         'Repeats',
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: dark ? Colors.white54 : Colors.black45,
+                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                         ),
                       ),
                     ),
@@ -1724,7 +1722,7 @@ class _ClassDialogState extends State<_ClassDialog> {
                     child: OutlinedButton(
                       onPressed: _saving ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: dark ? Colors.white70 : Colors.black54,
+                        foregroundColor: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                         side: BorderSide(
                           color: dark ? Colors.white24 : Colors.black12,
                           width: 1.5,
@@ -1736,7 +1734,7 @@ class _ClassDialogState extends State<_ClassDialog> {
                       ),
                       child: Text(
                         'Cancel',
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 15,
                         ),
@@ -1767,7 +1765,7 @@ class _ClassDialogState extends State<_ClassDialog> {
                             )
                           : Text(
                               isEdit ? 'Yes, Update' : 'Yes, Add',
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                               ),
@@ -1811,13 +1809,13 @@ class _DialogField extends StatelessWidget {
       ),
       child: TextField(
         controller: controller,
-        style: GoogleFonts.inter(
-            color: dark ? Colors.white : Colors.black87,
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: GoogleFonts.inter(
-              color: dark ? Colors.white54 : Colors.black45, fontSize: 13),
+          labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted, fontSize: 13),
           prefixIcon: Icon(icon,
               size: 18,
               color: primaryColor.withValues(alpha: 0.7)),
@@ -1868,14 +1866,14 @@ class _TimeButton extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 10,
-                        color: dark ? Colors.white38 : Colors.black38)),
+                        color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5))),
                 Text(format12Hour(time),
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: dark ? Colors.white : Colors.black87)),
+                        color: Theme.of(context).colorScheme.onSurface)),
               ],
             ),
           ],
@@ -1893,7 +1891,7 @@ void _showError(BuildContext context, String message) {
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       content: Text(message,
-          style: GoogleFonts.inter(
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               color: Colors.white, fontWeight: FontWeight.w600)),
     ),
   );
@@ -1959,13 +1957,13 @@ class _SubjectAutocompleteField extends StatelessWidget {
           return TextField(
             controller: fieldTextEditingController,
             focusNode: fieldFocusNode,
-            style: GoogleFonts.inter(
-                color: dark ? Colors.white : Colors.black87,
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500),
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: GoogleFonts.inter(
-                  color: dark ? Colors.white54 : Colors.black45, fontSize: 13),
+              labelStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted, fontSize: 13),
               prefixIcon: Icon(icon,
                   size: 18, color: primaryColor.withValues(alpha: 0.7)),
               border: InputBorder.none,
@@ -1999,15 +1997,15 @@ class _SubjectAutocompleteField extends StatelessWidget {
                     return ListTile(
                       title: Text(
                         option.Title,
-                        style: GoogleFonts.inter(
-                          color: dark ? Colors.white : Colors.black87,
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w500,
                           fontSize: 14,
                         ),
                       ),
                       subtitle: Text(
                         option.Code,
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                           color: dark ? Colors.white54 : Colors.black54,
                           fontSize: 12,
                         ),
@@ -2075,12 +2073,12 @@ class _WeekChip extends StatelessWidget {
                 size: 16,
                 color: selected
                     ? Colors.white
-                    : (dark ? Colors.white54 : Colors.black45),
+                    : (Theme.of(context).extension<AppColorsExtension>()!.textMuted),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   color: selected

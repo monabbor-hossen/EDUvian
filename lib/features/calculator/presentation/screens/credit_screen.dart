@@ -68,7 +68,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
           foregroundColor: isDark(context) ? Colors.white : primaryColor,
           title: Text(
             'Credit & Cost',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -92,7 +92,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                               children: [
                                 Text(
                                   'Scholarship',
-                                  style: GoogleFonts.inter(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
                                 ),
                                 const SizedBox(height: 6),
                                 Consumer(
@@ -115,7 +115,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                               children: [
                                 Text(
                                   'Department',
-                                  style: GoogleFonts.inter(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
                                 ),
                                 const SizedBox(height: 6),
                                 Consumer(
@@ -166,7 +166,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                         padding: const EdgeInsets.only(top: 20.0),
                         child: Text(
                           "Search and add subjects above",
-                          style: GoogleFonts.inter(color: isDark(context) ? Colors.white54 : Colors.black45, fontStyle: FontStyle.italic),
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white54 : Colors.black45, fontStyle: FontStyle.italic),
                         ).animate().fadeIn(delay: 300.ms),
                       ),
                     ),
@@ -231,7 +231,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                                     Expanded(
                                       child: Text(
                                         'Apply 5% Sibling/Spouse Discount',
-                                        style: GoogleFonts.inter(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w500, fontSize: 13),
+                                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w500, fontSize: 13),
                                       ),
                                     ),
                                   ],
@@ -252,11 +252,11 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                                   children: [
                                     Text(
                                       'Total Cost',
-                                      style: GoogleFonts.poppins(color: primaryColor, fontWeight: FontWeight.w600, fontSize: 16),
+                                      style: Theme.of(context).textTheme.titleLarge!.copyWith(color: primaryColor, fontWeight: FontWeight.w600, fontSize: 16),
                                     ),
                                     Text(
                                       '৳${totalCost.toStringAsFixed(2)}',
-                                      style: GoogleFonts.poppins(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 22),
+                                      style: Theme.of(context).textTheme.titleLarge!.copyWith(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 22),
                                     ),
                                   ],
                                 ),
@@ -289,7 +289,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
           ),
           child: Text(
             subject.Code,
-            style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
           ),
         ),
         const SizedBox(width: 12),
@@ -301,12 +301,12 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
                 subject.Title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
               ),
               const SizedBox(height: 2),
               Text(
                 'Cr: ${subject.Credit}',
-                style: GoogleFonts.inter(color: isDark(context) ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w500, fontSize: 12),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: isDark(context) ? Colors.white70 : Colors.black54, fontWeight: FontWeight.w500, fontSize: 12),
               ),
             ],
           ),
@@ -327,7 +327,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
     children: [
       Text(
         label,
-        style: GoogleFonts.inter(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: isDark(context) ? Colors.white : Colors.black87,
           fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
           fontSize: 14,
@@ -335,7 +335,7 @@ class _CreditCalculationState extends ConsumerState<CreditCalculation> {
       ),
       Text(
         value,
-        style: GoogleFonts.inter(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: isDark(context) ? Colors.white : Colors.black87,
           fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
           fontSize: 14,

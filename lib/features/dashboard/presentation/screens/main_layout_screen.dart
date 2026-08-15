@@ -185,15 +185,15 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
               size: 24,
               color: isSelected 
                 ? primaryColor 
-                : (dark ? Colors.white54 : Colors.black45),
+                : (Theme.of(context).extension<AppColorsExtension>()!.textMuted),
             ).animate(target: isSelected ? 1 : 0)
              .scale(end: const Offset(1.15, 1.15))
              .tint(color: primaryColor, end: isSelected ? 1.0 : 0.0),
             const SizedBox(height: 4),
             Text(
               label,
-              style: GoogleFonts.poppins(
-                color: isSelected ? primaryColor : (dark ? Colors.white54 : Colors.black45),
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                color: isSelected ? primaryColor : (Theme.of(context).extension<AppColorsExtension>()!.textMuted),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 10,
                 letterSpacing: 0.5,

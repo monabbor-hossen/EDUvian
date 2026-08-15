@@ -90,19 +90,19 @@ class _LoginRequired extends StatelessWidget {
                       .scale(begin: const Offset(0.9, 0.9)),
                   const SizedBox(height: 24),
                   Text('Login Required',
-                      style: GoogleFonts.poppins(
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: dark ? Colors.white : Colors.black87,
+                        color: Theme.of(context).colorScheme.onSurface,
                       )),
                   const SizedBox(height: 12),
                   Text(
                     'Please log in to chat with your section peers.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,
                         height: 1.5,
-                        color: dark ? Colors.white54 : Colors.black45),
+                        color: Theme.of(context).extension<AppColorsExtension>()!.textMuted),
                   ),
                 ],
               ),
@@ -213,7 +213,7 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
       surfaceTintColor: Colors.transparent,
       title: Text(
         'Messages',
-        style: GoogleFonts.poppins(
+        style: Theme.of(context).textTheme.titleLarge!.copyWith(
           color: textColor,
           fontWeight: FontWeight.w700,
           fontSize: 22,
@@ -224,9 +224,7 @@ class _ChatListViewState extends ConsumerState<_ChatListView> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
-              color: dark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.3)),
+              color: Theme.of(context).extension<AppColorsExtension>()!.glassBackground),
         ),
       ),
       actions: [
@@ -305,18 +303,18 @@ class _AllChatsListState extends State<_AllChatsList> {
             child: TextField(
               controller: widget.searchCtrl,
               onChanged: widget.onSearchChanged,
-              style: GoogleFonts.inter(
-                color: dark ? Colors.white : Colors.black87,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 15,
               ),
               decoration: InputDecoration(
                 hintText: 'Search',
-                hintStyle: GoogleFonts.inter(
-                  color: dark ? Colors.white38 : Colors.black38,
+                hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                   fontSize: 15,
                 ),
                 prefixIcon: Icon(Icons.search_rounded,
-                    color: dark ? Colors.white38 : Colors.black38, size: 22),
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5), size: 22),
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
@@ -558,7 +556,7 @@ class _ChatTileState extends ConsumerState<_ChatTile> {
                           child: Center(
                             child: Text(
                               initials,
-                              style: GoogleFonts.poppins(
+                              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -597,10 +595,10 @@ class _ChatTileState extends ConsumerState<_ChatTile> {
                         children: [
                           Text(
                             widget.chatName,
-                            style: GoogleFonts.poppins(
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: dark ? Colors.white : Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -608,9 +606,9 @@ class _ChatTileState extends ConsumerState<_ChatTile> {
                           const SizedBox(height: 3),
                           Text(
                             widget.lastMessage,
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 13,
-                              color: dark ? Colors.white54 : Colors.black45,
+                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                               height: 1.3,
                             ),
                             maxLines: 1,
@@ -628,7 +626,7 @@ class _ChatTileState extends ConsumerState<_ChatTile> {
                         if (widget.timestamp != null)
                           Text(
                             formatListTime(widget.timestamp!),
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 11,
                               color: dark ? Colors.white30 : Colors.black38,
                             ),
@@ -780,10 +778,10 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
           Text(
             widget.chat.name,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: dark ? Colors.white : Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
@@ -794,7 +792,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               data: (_) => Text(
                 '${widget.chat.memberIds.length} Members',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   color: dark ? Colors.white54 : Colors.black54,
                 ),
@@ -808,7 +806,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               height: 80,
               child: membersAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Error', style: GoogleFonts.inter(color: Colors.red))),
+                error: (e, _) => Center(child: Text('Error', style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.red))),
                 data: (members) {
                   // Filter against the authoritative memberIds to exclude stale subcollection docs
                   final validMembers = members
@@ -835,7 +833,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
                               backgroundColor: _avatarColor(uid),
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: GoogleFonts.poppins(
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16),
@@ -849,7 +847,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: dark ? Colors.white70 : Colors.black87,
@@ -879,9 +877,9 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               widget.chat.type == 'direct'
                   ? (isMuted ? 'Unmute Chat' : 'Mute Chat')
                   : (isMuted ? 'Unmute Group' : 'Mute Group'),
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontWeight: FontWeight.w600,
-                color: dark ? Colors.white : Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -891,7 +889,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               leading: const Icon(Icons.exit_to_app_rounded, color: Colors.orange),
               title: Text(
                 'Leave Group',
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.orange,
                 ),
@@ -902,7 +900,7 @@ class _ChatOptionsSheetState extends ConsumerState<_ChatOptionsSheet> {
               leading: const Icon(Icons.delete_outline_rounded, color: Colors.red),
               title: Text(
                 'Delete Group',
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.red,
                 ),
@@ -942,20 +940,20 @@ class _NoSectionView extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 'No Chats Yet',
-                style: GoogleFonts.poppins(
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: dark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Add academic info in Settings to join your section chat, or tap the button below to start a custom group.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 13,
                   height: 1.5,
-                  color: dark ? Colors.white54 : Colors.black45,
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                 ),
               ),
             ],
@@ -1103,15 +1101,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               ),
               title: Text(
                 'Delete Message',
-                style: GoogleFonts.poppins(
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: dark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               content: Text(
                 'This message will be permanently deleted.',
-                style: GoogleFonts.inter(
-                  color: dark ? Colors.white70 : Colors.black54,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                 ),
               ),
               actions: [
@@ -1119,8 +1117,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   onPressed: () => Navigator.of(ctx).pop(false),
                   child: Text(
                     'Cancel',
-                    style: GoogleFonts.inter(
-                      color: dark ? Colors.white54 : Colors.black45,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     ),
                   ),
                 ),
@@ -1128,7 +1126,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   onPressed: () => Navigator.of(ctx).pop(true),
                   child: Text(
                     'Delete',
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1246,7 +1244,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                           child: Center(
                             child: Text(
                               initials,
-                              style: GoogleFonts.poppins(
+                              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14),
@@ -1280,7 +1278,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                         children: [
                           Text(
                             chatName,
-                            style: GoogleFonts.poppins(
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
                               color: textColor,
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
@@ -1290,7 +1288,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                           ),
                            Text(
                             type == 'direct' ? 'Active now' : '$numMembers Members · Active now',
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 11,
                               color: Colors.greenAccent.shade400,
                               fontWeight: FontWeight.w500,
@@ -1331,7 +1329,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ),
           error: (e, _) => Center(
             child: Text('Error: $e',
-                style: GoogleFonts.inter(color: Colors.red)),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.red)),
           ),
           data: (messages) {
             if (messages.isEmpty) {
@@ -1497,9 +1495,9 @@ class _MessageActionsSheet extends StatelessWidget {
               message.text,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13.5,
-                color: dark ? Colors.white70 : Colors.black54,
+                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                 height: 1.4,
               ),
             ),
@@ -1582,12 +1580,12 @@ class _ActionTile extends StatelessWidget {
             const SizedBox(width: 14),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: isDestructive
                     ? Colors.red
-                    : (dark ? Colors.white : Colors.black87),
+                    : (Theme.of(context).colorScheme.onSurface),
               ),
             ),
           ],
@@ -1660,7 +1658,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                   backgroundColor: avatarColor,
                   child: Text(
                     widget.message.initials,
-                    style: GoogleFonts.poppins(
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12),
@@ -1682,7 +1680,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                       padding: const EdgeInsets.only(left: 4, bottom: 4),
                       child: Text(
                         widget.message.senderName,
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: widget.dark ? Colors.white38 : Colors.black45),
@@ -1739,11 +1737,11 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     ),
                     child: Text(
                       widget.message.text,
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14.5,
                         color: widget.isMe
                             ? Colors.white
-                            : (widget.dark ? Colors.white : Colors.black87),
+                            : (widget.Theme.of(context).colorScheme.onSurface),
                         height: 1.35,
                       ),
                     ),
@@ -1764,7 +1762,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                           if (widget.message.edited)
                             Text(
                               'edited',
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 10,
                                 fontStyle: FontStyle.italic,
                                 color: widget.dark ? Colors.white30 : Colors.black38,
@@ -1773,7 +1771,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                           if (widget.message.edited && showTime)
                             Text(
                               ' • ',
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 10,
                                 color: widget.dark ? Colors.white30 : Colors.black38,
                               ),
@@ -1781,9 +1779,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
                           if (showTime)
                             Text(
                               formatBubbleTime(widget.message.timestamp),
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 10,
-                                color: widget.dark ? Colors.white38 : Colors.black38,
+                                color: widget.Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                               ),
                             ),
                         ],
@@ -1858,7 +1856,7 @@ class _MessageInput extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Editing message',
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 12,
                         color: Colors.amber,
                         fontWeight: FontWeight.w600,
@@ -1869,7 +1867,7 @@ class _MessageInput extends StatelessWidget {
                     onTap: onCancelEdit,
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 12,
                         color: Colors.amber.withValues(alpha: 0.75),
                         fontWeight: FontWeight.w500,
@@ -1892,7 +1890,7 @@ class _MessageInput extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 2),
                       child: IconButton(
                         icon: Icon(Icons.add_circle_outline_rounded,
-                            color: dark ? Colors.white54 : Colors.black45, size: 24),
+                            color: Theme.of(context).extension<AppColorsExtension>()!.textMuted, size: 24),
                         onPressed: () {},
                       ),
                     ),
@@ -1921,14 +1919,14 @@ class _MessageInput extends StatelessWidget {
                         maxLines: 5,
                         minLines: 1,
                         keyboardType: TextInputType.multiline,
-                        style: GoogleFonts.inter(
+                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                             fontSize: 14.5,
-                            color: dark ? Colors.white : Colors.black87),
+                            color: Theme.of(context).colorScheme.onSurface),
                         decoration: InputDecoration(
                           hintText: isEditing ? 'Edit your message...' : 'Type a message...',
-                          hintStyle: GoogleFonts.inter(
+                          hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 14.5,
-                              color: dark ? Colors.white38 : Colors.black38),
+                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
@@ -1996,9 +1994,7 @@ class _MessageInput extends StatelessWidget {
                                     size: 18,
                                     color: hasText
                                         ? Colors.white
-                                        : (dark
-                                            ? Colors.white38
-                                            : Colors.black38),
+                                        : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                                   ),
                           ),
                         ),
@@ -2050,19 +2046,19 @@ class _EmptyChat extends StatelessWidget {
             const SizedBox(height: 18),
             Text(
               'Start the Conversation',
-              style: GoogleFonts.poppins(
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: dark ? Colors.white : Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Send a message to start chatting with your peers.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 13,
-                color: dark ? Colors.white54 : Colors.black45,
+                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
               ),
             ),
           ],
@@ -2083,7 +2079,7 @@ AppBar _chatAppBar(BuildContext context, String title, bool dark) {
     surfaceTintColor: Colors.transparent,
     title: Text(
       title,
-      style: GoogleFonts.poppins(
+      style: Theme.of(context).textTheme.titleLarge!.copyWith(
         color: textColor,
         fontWeight: FontWeight.w700,
         fontSize: 22,
@@ -2094,9 +2090,7 @@ AppBar _chatAppBar(BuildContext context, String title, bool dark) {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-            color: dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.3)),
+            color: Theme.of(context).extension<AppColorsExtension>()!.glassBackground),
       ),
     ),
   );

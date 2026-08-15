@@ -58,7 +58,7 @@ class SubjectAutoComplete extends ConsumerWidget {
         return TextField(
           controller: controller,
           focusNode: focuseNode,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: dark ? Colors.white : Colors.black87),
+          style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface),
           onTap: () {
             controller.clear();
             controller.selection = TextSelection.collapsed(offset: controller.text.length);
@@ -100,7 +100,7 @@ class SubjectAutoComplete extends ConsumerWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                     title: Text(
                       option.toString(),
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 15, 
                         fontWeight: FontWeight.w600,
                         color: isDark(context) ? Colors.white : Colors.black87,
@@ -130,7 +130,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text(
           'Add Custom Subject', 
-          style: GoogleFonts.poppins(
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
             fontWeight: FontWeight.bold, 
             color: dark ? Colors.white : primaryColor
           )
@@ -159,7 +159,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
                       dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
                       items: creditTo.map((c) => DropdownMenuItem(
                         value: c, 
-                        child: Text(c, style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87))
+                        child: Text(c, style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface))
                       )).toList(),
                       onChanged: (value) {
                         if (value != null) ref.read(dialogCreditProvider.notifier).state = value;
@@ -183,7 +183,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
                       dropdownColor: dark ? const Color(0xFF2C2C32) : Colors.white,
                       items: gradeToPoint.keys.map((g) => DropdownMenuItem(
                         value: g, 
-                        child: Text(g, style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87))
+                        child: Text(g, style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface))
                       )).toList(),
                       onChanged: (value) {
                         if (value != null) ref.read(dialogGradeProvider.notifier).state = value;
@@ -198,7 +198,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -231,7 +231,7 @@ void showAddSubjectDialog(BuildContext context, WidgetRef ref) {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            child: Text('Add', style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold)),
           ),
         ],
       );

@@ -46,17 +46,17 @@ class DashboardScreen extends ConsumerWidget {
                           children: [
                             Text(
                               "Today's Schedule",
-                              style: GoogleFonts.poppins(
+                              style: Theme.of(context).textTheme.titleLarge!.copyWith(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: dark ? Colors.white : Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             Text(
                               todayName,
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 13,
-                                color: dark ? Colors.white54 : Colors.black45,
+                                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -82,7 +82,7 @@ class DashboardScreen extends ConsumerWidget {
                               const SizedBox(width: 6),
                               Text(
                                 'Manage',
-                                style: GoogleFonts.inter(
+                                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   color: primaryColor,
@@ -181,7 +181,7 @@ class _DashboardHeader extends StatelessWidget {
                 children: [
                   Text(
                     now.day.toString(),
-                    style: GoogleFonts.poppins(
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -190,7 +190,7 @@ class _DashboardHeader extends StatelessWidget {
                   ),
                   Text(
                     DateFormat('MMM').format(now),
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Colors.white70,
@@ -206,17 +206,17 @@ class _DashboardHeader extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat('EEEE').format(now),
-                    style: GoogleFonts.poppins(
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: dark ? Colors.white : Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   Text(
                     DateFormat('d MMMM yyyy').format(now),
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 13,
-                      color: dark ? Colors.white60 : Colors.black54,
+                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -231,7 +231,7 @@ class _DashboardHeader extends StatelessWidget {
                     ),
                     child: Text(
                       'Academic Day',
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: Colors.green.shade600,
@@ -302,12 +302,12 @@ class _TodayClassCard extends StatelessWidget {
               children: [
                 Text(
                   format12Hour(startTime),
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: ongoing
                         ? primaryColor
-                        : (dark ? Colors.white54 : Colors.black45),
+                        : (Theme.of(context).extension<AppColorsExtension>()!.textMuted),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -326,9 +326,9 @@ class _TodayClassCard extends StatelessWidget {
                 if (!isLast && entry.getEventStartTime(dateStr) == null)
                   Text(
                     format12Hour(endTime),
-                    style: GoogleFonts.inter(
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
-                      color: dark ? Colors.white38 : Colors.black38,
+                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
                     ),
                   ),
               ],
@@ -399,7 +399,7 @@ class _TodayClassCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             entry.subject,
-                            style: GoogleFonts.poppins(
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                               decoration: (eventText?.toLowerCase().contains('cancel') == true) 
@@ -407,7 +407,7 @@ class _TodayClassCard extends StatelessWidget {
                                   : null,
                               color: ongoing
                                   ? Colors.white
-                                  : (dark ? Colors.white : Colors.black87),
+                                  : (Theme.of(context).colorScheme.onSurface),
                             ),
                           ),
                         ),
@@ -433,7 +433,7 @@ class _TodayClassCard extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   'NOW',
-                                  style: GoogleFonts.inter(
+                                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
                                     color: Colors.white,
@@ -511,7 +511,7 @@ class _TodayClassCard extends StatelessWidget {
                             ),
                             child: Text(
                               et,
-                              style: GoogleFonts.inter(
+                              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                   color: ongoing ? Colors.white : baseColor,
@@ -557,7 +557,7 @@ class _TodayClassCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(label,
               style:
-                  GoogleFonts.inter(fontSize: 12, color: color, height: 1.2)),
+                  Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 12, color: color, height: 1.2)),
         ],
       );
     }
@@ -580,20 +580,20 @@ class _TodayClassCard extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'No classes today!',
-                style: GoogleFonts.poppins(
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: dark ? Colors.white : Colors.black87,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Enjoy your free day, or add classes\nvia Manage Routine.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                   fontSize: 14,
                   height: 1.5,
-                  color: dark ? Colors.white54 : Colors.black45,
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                 ),
               ),
             ],
@@ -654,10 +654,10 @@ class _TodayClassCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Could not load routine.\nCheck your connection.',
-                  style: GoogleFonts.inter(
+                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 14,
                     height: 1.5,
-                    color: dark ? Colors.white70 : Colors.black54,
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                   ),
                 ),
               ),

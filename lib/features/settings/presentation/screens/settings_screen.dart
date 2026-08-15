@@ -131,7 +131,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           foregroundColor: dark ? Colors.white : primaryColor,
           title: Text(
             'Settings',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 20),
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           centerTitle: true,
         ),
@@ -145,8 +145,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 if (isLoggedIn) ...[
                   Text(
                     "Profile",
-                    style: GoogleFonts.poppins(
-                      color: dark ? Colors.white70 : Colors.black54,
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
@@ -164,7 +164,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
                               child: user.photoURL == null ? Text(
                                 userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                                style: GoogleFonts.poppins(color: primaryColor, fontSize: 24, fontWeight: FontWeight.bold),
+                                style: Theme.of(context).textTheme.titleLarge!.copyWith(color: primaryColor, fontSize: 24, fontWeight: FontWeight.bold),
                               ) : null,
                             ),
                             const SizedBox(width: 16),
@@ -175,10 +175,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       children: [
                                         TextField(
                                           controller: _nameController,
-                                          style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                                           decoration: InputDecoration(
                                             hintText: "Enter display name",
-                                            hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                                             isDense: true,
                                             border: const UnderlineInputBorder(),
                                           ),
@@ -187,10 +187,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         TextField(
                                           controller: _academicController,
                                           textCapitalization: TextCapitalization.characters,
-                                          style: GoogleFonts.inter(color: dark ? Colors.white : Colors.black87),
+                                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                                           decoration: InputDecoration(
                                             hintText: "e.g. 7DCSE.2 or 7DCSE",
-                                            hintStyle: GoogleFonts.inter(color: dark ? Colors.white38 : Colors.black38),
+                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
                                             isDense: true,
                                             border: const UnderlineInputBorder(),
                                           ),
@@ -202,8 +202,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       children: [
                                         Text(
                                           userName.isNotEmpty ? userName : 'User',
-                                          style: GoogleFonts.poppins(
-                                            color: dark ? Colors.white : Colors.black87,
+                                          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                            color: Theme.of(context).colorScheme.onSurface,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 18,
                                           ),
@@ -213,8 +213,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           user.email ?? '',
-                                          style: GoogleFonts.inter(
-                                            color: dark ? Colors.white60 : Colors.black54,
+                                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                            color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                                             fontSize: 13,
                                           ),
                                         ),
@@ -238,7 +238,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                           content: Text(
                                             'Invalid format. Use e.g. 7DCSE.2 or 7DCSE',
-                                            style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+                                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
                                           ),
                                         ),
                                       );
@@ -283,8 +283,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 Text(
                   "Preferences",
-                  style: GoogleFonts.poppins(
-                    color: dark ? Colors.white70 : Colors.black54,
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -300,8 +300,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         title: Text(
                           "Dark Mode",
-                          style: GoogleFonts.inter(
-                            color: dark ? Colors.white : Colors.black87,
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -326,8 +326,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         title: Text(
                           "Push Notifications",
-                          style: GoogleFonts.inter(
-                            color: dark ? Colors.white : Colors.black87,
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -360,8 +360,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 
                 Text(
                   "Account Actions",
-                  style: GoogleFonts.poppins(
-                    color: dark ? Colors.white70 : Colors.black54,
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -375,7 +375,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     title: Text(
                       isLoggedIn ? "Log Out" : "Log In",
-                      style: GoogleFonts.inter(
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         color: isLoggedIn ? Colors.redAccent : primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
@@ -421,7 +421,7 @@ class _AcademicChips extends StatelessWidget {
     if (info == null) {
       return Text(
         raw,
-        style: GoogleFonts.inter(
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: dark ? Colors.white70 : primaryColor,
           fontWeight: FontWeight.w600,
           fontSize: 13,
@@ -476,7 +476,7 @@ class _AcademicChips extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.inter(
+            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: color,
