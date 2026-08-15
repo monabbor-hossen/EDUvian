@@ -8,6 +8,8 @@ class ChatGroup {
   final String lastSenderId;
   final DateTime? lastTimestamp;
   final List<String> mutedBy;
+  final bool isLastMessageEncrypted;
+  final Map<String, String>? lastMessageKeys;
 
   const ChatGroup({
     required this.id,
@@ -19,5 +21,7 @@ class ChatGroup {
     this.lastSenderId = '',
     this.lastTimestamp,
     this.mutedBy = const [],
+    this.isLastMessageEncrypted = false,
+    this.lastMessageKeys,
   });
 }

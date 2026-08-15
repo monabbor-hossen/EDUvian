@@ -14,6 +14,8 @@ class ChatGroupModel extends ChatGroup {
     super.lastSenderId = '',
     super.lastTimestamp,
     super.mutedBy = const [],
+    super.isLastMessageEncrypted = false,
+    super.lastMessageKeys,
   });
 
   factory ChatGroupModel.fromFirestore(DocumentSnapshot doc) {
@@ -78,6 +80,10 @@ class ChatGroupModel extends ChatGroup {
       lastSenderId: data['lastSenderId'] as String? ?? '',
       lastTimestamp: (data['lastTimestamp'] as Timestamp? ?? data['lastMessageTime'] as Timestamp?)?.toDate(),
       mutedBy: List<String>.from(data['mutedBy'] ?? []),
+      isLastMessageEncrypted: data['isLastMessageEncrypted'] as bool? ?? false,
+      lastMessageKeys: data['lastMessageKeys'] != null 
+          ? Map<String, String>.from(data['lastMessageKeys'] as Map)
+          : null,
     );
   }
 }

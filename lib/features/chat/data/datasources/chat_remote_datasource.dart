@@ -130,11 +130,13 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     });
 
     await _db.collection('chats').doc(sectionId).set({
-      'lastMessage': isEncrypted ? 'Encrypted Message' : trimmed,
+      'lastMessage': encryptedText,
       'lastSenderName': currentDisplayName,
       'lastSenderId': user.uid,
       'lastTimestamp': FieldValue.serverTimestamp(),
       'lastMessageTime': FieldValue.serverTimestamp(),
+      'isLastMessageEncrypted': isEncrypted,
+      if (encryptedKeys != null) 'lastMessageKeys': encryptedKeys,
     }, SetOptions(merge: true));
 
     // Dispatch push notifications to other participants
@@ -480,19 +482,56 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   Stream<List<ChatGroupModel>> streamUserChats() {
     final user = _user;
     if (user == null) return Stream.value([]);
+    final cryptoService = CryptoService();
 
     return _db
         .collection('chats')
         .where('participants', arrayContains: user.uid)
         .snapshots()
-        .map((snap) {
-          final list = snap.docs.map(ChatGroupModel.fromFirestore).toList();
-          list.sort((a, b) {
-            final t1 = a.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
-            final t2 = b.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
-            return t2.compareTo(t1);
-          });
-          return list;
-        });
+        .asyncMap((snap) async {
+      if (!cryptoService.isInitialized) {
+        await cryptoService.initialize();
+      }
+      final list = <ChatGroupModel>[];
+      for (final doc in snap.docs) {
+        var model = ChatGroupModel.fromFirestore(doc);
+        if (model.isLastMessageEncrypted &&
+            model.lastMessageKeys != null &&
+            cryptoService.isInitialized) {
+          final myEncryptedAes = model.lastMessageKeys![user.uid];
+          if (myEncryptedAes != null) {
+            try {
+              final aesKey = cryptoService.decryptAESKeyWithRSA(myEncryptedAes);
+              if (aesKey != null) {
+                final decryptedText =
+                    cryptoService.decryptMessage(model.lastMessage, aesKey);
+                model = ChatGroupModel(
+                  id: model.id,
+                  name: model.name,
+                  type: model.type,
+                  memberIds: model.memberIds,
+                  lastMessage: decryptedText,
+                  lastSenderName: model.lastSenderName,
+                  lastSenderId: model.lastSenderId,
+                  lastTimestamp: model.lastTimestamp,
+                  mutedBy: model.mutedBy,
+                  isLastMessageEncrypted: model.isLastMessageEncrypted,
+                  lastMessageKeys: model.lastMessageKeys,
+                );
+              }
+            } catch (e) {
+              debugPrint('Decryption failed for lastMessage: $e');
+            }
+          }
+        }
+        list.add(model);
+      }
+      list.sort((a, b) {
+        final t1 = a.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final t2 = b.lastTimestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return t2.compareTo(t1);
+      });
+      return list;
+    });
   }
 }
