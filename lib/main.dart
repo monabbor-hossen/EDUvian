@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/services/notification_service.dart';
+import 'core/services/presence_service.dart';
 import 'firebase_options.dart';
 import 'core/router/app_router.dart';
 
@@ -13,6 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService().initialize();
+  PresenceService().initialize();
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -19,6 +19,7 @@ import '../../domain/entities/chat_group.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/repositories/chat_repository.dart';
 import '../providers/chat_providers.dart';
+import '../providers/presence_providers.dart';
 
 // ─── Helpers ────────────────------------------------------------------------───
 
@@ -361,6 +362,9 @@ class _AllChatsListState extends State<_AllChatsList> {
                 isMuted:
                     currentUid != null && chat.mutedBy.contains(currentUid),
                 isSection: chat.type == 'section',
+                otherUserId: chat.type == 'direct' 
+                    ? chat.memberIds.firstWhere((id) => id != currentUid, orElse: () => '')
+                    : null,
                 onTap: () {
                   context.push('/messages/room/${chat.id}');
                 },
@@ -392,13 +396,14 @@ class _AllChatsListState extends State<_AllChatsList> {
 
 // ─── Chat Tile ────────────────────────────────---------------------------------
 
-class _ChatTile extends StatefulWidget {
+class _ChatTile extends ConsumerStatefulWidget {
   final String chatName;
   final String lastMessage;
   final DateTime? timestamp;
   final bool dark;
   final bool isMuted;
   final bool isSection;
+  final String? otherUserId;
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final VoidCallback onInfo;
@@ -411,16 +416,17 @@ class _ChatTile extends StatefulWidget {
     required this.dark,
     required this.isMuted,
     required this.isSection,
+    this.otherUserId,
     required this.onTap,
     required this.onDelete,
     required this.onInfo,
   });
 
   @override
-  State<_ChatTile> createState() => _ChatTileState();
+  ConsumerState<_ChatTile> createState() => _ChatTileState();
 }
 
-class _ChatTileState extends State<_ChatTile> {
+class _ChatTileState extends ConsumerState<_ChatTile> {
   double _swipeOffset = 0;
   bool _swiping = false;
   static const _revealThreshold = 140.0;
@@ -441,6 +447,11 @@ class _ChatTileState extends State<_ChatTile> {
         ? widget.chatName.substring(0, 2)
         : widget.chatName;
     final avatarColor = _avatarColor(widget.chatName);
+
+    bool isOnline = false;
+    if (widget.otherUserId != null && widget.otherUserId!.isNotEmpty) {
+      isOnline = ref.watch(userOnlineProvider(widget.otherUserId!)).value ?? false;
+    }
 
     return GestureDetector(
       onHorizontalDragStart: widget.isSection ? null : (_) => setState(() => _swiping = true),
@@ -556,24 +567,25 @@ class _ChatTileState extends State<_ChatTile> {
                           ),
                         ),
                         // Online dot
-                        Positioned(
-                          bottom: 2,
-                          right: 2,
-                          child: Container(
-                            width: 13,
-                            height: 13,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.greenAccent.shade400,
-                              border: Border.all(
-                                color: dark
-                                    ? const Color(0xFF0A020C)
-                                    : const Color(0xFFFAF5F8),
-                                width: 2,
+                        if (isOnline)
+                          Positioned(
+                            bottom: 2,
+                            right: 2,
+                            child: Container(
+                              width: 13,
+                              height: 13,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.greenAccent.shade400,
+                                border: Border.all(
+                                  color: dark
+                                      ? const Color(0xFF0A020C)
+                                      : const Color(0xFFFAF5F8),
+                                  width: 2,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     const SizedBox(width: 14),
