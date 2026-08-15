@@ -11,6 +11,8 @@ class ChatMessageModel extends ChatMessage {
     required super.text,
     required super.timestamp,
     super.edited = false,
+    super.isEncrypted = false,
+    super.encryptedKeys,
   });
 
   factory ChatMessageModel.fromFirestore(DocumentSnapshot doc) {
@@ -23,6 +25,10 @@ class ChatMessageModel extends ChatMessage {
       text: data['text'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
       edited: data['edited'] as bool? ?? false,
+      isEncrypted: data['isEncrypted'] as bool? ?? false,
+      encryptedKeys: data['encryptedKeys'] != null 
+          ? Map<String, String>.from(data['encryptedKeys'] as Map)
+          : null,
     );
   }
 
@@ -33,6 +39,8 @@ class ChatMessageModel extends ChatMessage {
         'text': text,
         'timestamp': Timestamp.fromDate(timestamp),
         'edited': edited,
+        'isEncrypted': isEncrypted,
+        if (encryptedKeys != null) 'encryptedKeys': encryptedKeys,
       };
 }
 

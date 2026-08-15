@@ -6,6 +6,8 @@ class ChatMessage {
   final String text;
   final DateTime timestamp;
   final bool edited;
+  final bool isEncrypted;
+  final Map<String, String>? encryptedKeys;
 
   const ChatMessage({
     required this.id,
@@ -15,6 +17,8 @@ class ChatMessage {
     required this.text,
     required this.timestamp,
     this.edited = false,
+    this.isEncrypted = false,
+    this.encryptedKeys,
   });
 
   /// Returns two-letter initials from the sender's name or email.

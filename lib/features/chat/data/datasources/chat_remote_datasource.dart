@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../../../core/services/crypto_service.dart';
 
 import '../models/chat_group_model.dart';
 import '../models/chat_message_model.dart';
@@ -75,6 +78,40 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
+    
+    final cryptoService = CryptoService();
+    if (!cryptoService.isInitialized) {
+      await cryptoService.initialize();
+    }
+    String encryptedText = trimmed;
+    Map<String, String>? encryptedKeys;
+    bool isEncrypted = false;
+    
+    if (cryptoService.isInitialized) {
+      try {
+        final chatDoc = await _db.collection('chats').doc(sectionId).get();
+        if (chatDoc.exists) {
+          final participants = List<String>.from(chatDoc.data()?['participants'] ?? []);
+          
+          final aesKey = cryptoService.generateAESKey();
+          encryptedText = cryptoService.encryptMessage(trimmed, aesKey);
+          
+          encryptedKeys = {};
+          for (final participantId in participants) {
+            final userDoc = await _db.collection('users').doc(participantId).get();
+            final pubKeyStr = userDoc.data()?['publicKey'] as String?;
+            if (pubKeyStr != null) {
+              final pubKey = cryptoService.parsePublicKeyFromJson(pubKeyStr);
+              final encryptedAes = cryptoService.encryptAESKeyWithRSA(aesKey, pubKey);
+              encryptedKeys[participantId] = encryptedAes;
+            }
+          }
+          isEncrypted = true;
+        }
+      } catch (e) {
+        debugPrint('Encryption failed: $e');
+      }
+    }
 
     final msgRef = _db
         .collection('chats')
@@ -86,12 +123,14 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       'senderId': user.uid,
       'senderName': currentDisplayName,
       'senderEmail': user.email ?? '',
-      'text': trimmed,
+      'text': encryptedText,
       'timestamp': FieldValue.serverTimestamp(),
+      'isEncrypted': isEncrypted,
+      if (encryptedKeys != null) 'encryptedKeys': encryptedKeys,
     });
 
     await _db.collection('chats').doc(sectionId).set({
-      'lastMessage': trimmed,
+      'lastMessage': isEncrypted ? 'Encrypted Message' : trimmed,
       'lastSenderName': currentDisplayName,
       'lastSenderId': user.uid,
       'lastTimestamp': FieldValue.serverTimestamp(),
@@ -120,11 +159,11 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         for (final p in participants) {
           if (p != user.uid && !mutedBy.contains(p)) {
             // Fire and forget
-            notificationService.sendNotificationToTopic(
-              title: title,
-              body: trimmed,
-              topicName: 'user_$p',
-            );
+              notificationService.sendNotificationToTopic(
+                title: title,
+                body: isEncrypted ? 'New Message' : trimmed,
+                topicName: 'user_$p',
+              );
           }
         }
       }
@@ -379,6 +418,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
   @override
   Stream<List<ChatMessageModel>> streamMessages(String sectionId, {int limit = 50}) {
+    final cryptoService = CryptoService();
     return _db
         .collection('chats')
         .doc(sectionId)
@@ -386,9 +426,44 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         .orderBy('timestamp', descending: true) // Get the newest messages
         .limit(limit)
         .snapshots()
-        .map((snap) => snap.docs
-            .map(ChatMessageModel.fromFirestore)
-            .toList());
+        .asyncMap((snap) async {
+      if (!cryptoService.isInitialized) {
+        await cryptoService.initialize();
+      }
+      final messages = <ChatMessageModel>[];
+      for (final doc in snap.docs) {
+        var model = ChatMessageModel.fromFirestore(doc);
+        if (model.isEncrypted &&
+            model.encryptedKeys != null &&
+            cryptoService.isInitialized) {
+          final myEncryptedAes = model.encryptedKeys![currentUid];
+          if (myEncryptedAes != null) {
+            try {
+              final aesKey = cryptoService.decryptAESKeyWithRSA(myEncryptedAes);
+              if (aesKey != null) {
+                final decryptedText =
+                    cryptoService.decryptMessage(model.text, aesKey);
+                model = ChatMessageModel(
+                  id: model.id,
+                  senderId: model.senderId,
+                  senderName: model.senderName,
+                  senderEmail: model.senderEmail,
+                  text: decryptedText,
+                  timestamp: model.timestamp,
+                  edited: model.edited,
+                  isEncrypted: model.isEncrypted,
+                  encryptedKeys: model.encryptedKeys,
+                );
+              }
+            } catch (e) {
+              debugPrint('Decryption failed: $e');
+            }
+          }
+        }
+        messages.add(model);
+      }
+      return messages;
+    });
   }
 
   @override

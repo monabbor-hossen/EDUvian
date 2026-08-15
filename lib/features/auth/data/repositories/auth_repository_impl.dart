@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../../../core/services/crypto_service.dart';
 
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -40,6 +43,13 @@ class AuthRepositoryImpl implements AuthRepository {
       'name': displayName,
       'lastLoginAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+
+    // Initialize cryptography for E2EE
+    try {
+      await CryptoService().initialize();
+    } catch (e) {
+      debugPrint('Failed to initialize CryptoService: $e');
+    }
   }
 
   @override
@@ -71,7 +81,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() {
+  Future<void> signOut() async {
+    await CryptoService().clearKeys();
     return _remoteDataSource.signOut();
   }
 }
