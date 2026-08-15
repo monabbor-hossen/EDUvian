@@ -69,7 +69,7 @@ class _LoginRequired extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppBackground(
       child: Scaffold(
-        //backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent,
         appBar: _chatAppBar(context, 'Messages', dark),
         body: Center(
           child: Padding(
