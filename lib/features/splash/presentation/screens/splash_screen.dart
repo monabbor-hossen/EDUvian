@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 
@@ -59,7 +58,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: dark ? const Color(0xFF0A020C) : const Color(0xFFFAF5F8),
+      backgroundColor: dark ? darkBg : lightBg,
       body: Stack(
         children: [
           // ── Background Orbs ──────────────────────────────────────────────
@@ -96,9 +95,9 @@ class _SplashScreenState extends State<SplashScreen>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFF3B1F8F)
+                            accentIndigo
                                 .withValues(alpha: dark ? 0.28 : 0.18),
-                            const Color(0xFF3B1F8F).withValues(alpha: 0),
+                            accentIndigo.withValues(alpha: 0),
                           ],
                         ),
                       ),
@@ -171,7 +170,7 @@ class _SplashScreenState extends State<SplashScreen>
                         end: Alignment.bottomRight,
                         colors: [
                           primaryColor,
-                          Color(0xFF3B1F8F),
+                          accentIndigo,
                         ],
                       ),
                       boxShadow: [
@@ -181,7 +180,7 @@ class _SplashScreenState extends State<SplashScreen>
                           spreadRadius: 8,
                         ),
                         BoxShadow(
-                          color: const Color(0xFF3B1F8F).withValues(alpha: 0.3),
+                          color: accentIndigo.withValues(alpha: 0.3),
                           blurRadius: 60,
                           spreadRadius: 4,
                         ),
@@ -262,7 +261,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                     letterSpacing: 1.0,
                   ),
                 ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
@@ -302,8 +301,8 @@ class _ArcLoaderPainter extends CustomPainter {
 
     // Arc sweep
     final paint = Paint()
-      ..shader = const LinearGradient(
-        colors: [primaryColor, Color(0xFF3B1F8F), secondaryColor],
+      ..shader = LinearGradient(
+        colors: [primaryColor, accentIndigo, secondaryColor],
       ).createShader(rect)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.5

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -328,7 +327,7 @@ class _TodayClassCard extends StatelessWidget {
                     format12Hour(endTime),
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                       fontSize: 10,
-                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                      color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                     ),
                   ),
               ],

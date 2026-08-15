@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -178,7 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                                           decoration: InputDecoration(
                                             hintText: "Enter display name",
-                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                                             isDense: true,
                                             border: const UnderlineInputBorder(),
                                           ),
@@ -190,7 +189,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                           style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                                           decoration: InputDecoration(
                                             hintText: "e.g. 7DCSE.2 or 7DCSE",
-                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                                            hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                                             isDense: true,
                                             border: const UnderlineInputBorder(),
                                           ),
@@ -476,11 +475,10 @@ class _AcademicChips extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: color,
-            ),
+            ).copyWith(color: color),
           ),
         ],
       ),

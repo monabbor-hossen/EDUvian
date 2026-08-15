@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -26,8 +25,8 @@ import '../providers/presence_providers.dart';
 /// Returns a deterministic vibrant color from a string (uid / name).
 Color _avatarColor(String seed) {
   final colors = [
-    const Color(0xFF6B0032),
-    const Color(0xFF3B1F8F),
+    primaryColor,
+    accentIndigo,
     const Color(0xFFD13D59),
     const Color(0xFF1E8F6B),
     const Color(0xFF8F1E6B),
@@ -70,7 +69,7 @@ class _LoginRequired extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppBackground(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        //backgroundColor: Colors.transparent,
         appBar: _chatAppBar(context, 'Messages', dark),
         body: Center(
           child: Padding(
@@ -310,11 +309,11 @@ class _AllChatsListState extends State<_AllChatsList> {
               decoration: InputDecoration(
                 hintText: 'Search',
                 hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                  color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                   fontSize: 15,
                 ),
                 prefixIcon: Icon(Icons.search_rounded,
-                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5), size: 22),
+                    color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5), size: 22),
                 border: InputBorder.none,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 4, vertical: 13),
@@ -577,8 +576,8 @@ class _ChatTileState extends ConsumerState<_ChatTile> {
                                 color: Colors.greenAccent.shade400,
                                 border: Border.all(
                                   color: dark
-                                      ? const Color(0xFF0A020C)
-                                      : const Color(0xFFFAF5F8),
+                                      ? darkBg
+                                      : lightBg,
                                   width: 2,
                                 ),
                               ),
@@ -1262,8 +1261,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                               color: Colors.greenAccent.shade400,
                               border: Border.all(
                                 color: dark
-                                    ? const Color(0xFF0A020C)
-                                    : const Color(0xFFFAF5F8),
+                                    ? darkBg
+                                    : lightBg,
                                 width: 1.5,
                               ),
                             ),
@@ -1741,7 +1740,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                         fontSize: 14.5,
                         color: widget.isMe
                             ? Colors.white
-                            : (widget.Theme.of(context).colorScheme.onSurface),
+                            : (Theme.of(context).colorScheme.onSurface),
                         height: 1.35,
                       ),
                     ),
@@ -1781,7 +1780,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                               formatBubbleTime(widget.message.timestamp),
                               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                 fontSize: 10,
-                                color: widget.Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                                color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                               ),
                             ),
                         ],
@@ -1830,8 +1829,8 @@ class _MessageInput extends StatelessWidget {
           12, isEditing ? 4 : 10, 12, MediaQuery.paddingOf(context).bottom + 10),
       decoration: BoxDecoration(
         color: dark
-            ? const Color(0xFF0A020C).withValues(alpha: 0.85)
-            : const Color(0xFFFAF5F8).withValues(alpha: 0.85),
+            ? darkBg.withValues(alpha: 0.85)
+            : lightBg.withValues(alpha: 0.85),
         border: Border(
           top: BorderSide(
             color: isEditing
@@ -1926,7 +1925,7 @@ class _MessageInput extends StatelessWidget {
                           hintText: isEditing ? 'Edit your message...' : 'Type a message...',
                           hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 14.5,
-                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
@@ -1994,7 +1993,7 @@ class _MessageInput extends StatelessWidget {
                                     size: 18,
                                     color: hasText
                                         ? Colors.white
-                                        : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                                        : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                                   ),
                           ),
                         ),

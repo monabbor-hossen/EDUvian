@@ -1,10 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'core/services/notification_service.dart';
 import 'core/services/presence_service.dart';
+import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'core/router/app_router.dart';
 
@@ -30,16 +30,8 @@ class MyApp extends ConsumerWidget {
       title: 'EDUvian',
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(107, 0, 50, 1), brightness: Brightness.light),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromRGBO(107, 0, 50, 1), brightness: Brightness.dark),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-      ),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       routerConfig: router,
     );
   }

@@ -84,7 +84,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     final dark = isDark(context);
 
     return AppBackground(
@@ -97,7 +96,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 440),
                 decoration: BoxDecoration(
-                  color: dark ? const Color(0xFF1E1E24) : Colors.white,
+                  color: dark ? darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   border: dark ? Border.all(color: Colors.white12) : null,
                   boxShadow: [
@@ -293,7 +292,7 @@ class _AuthTextField extends StatelessWidget {
     final dark = isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF2C2C32) : const Color(0xFFF7F4F8),
+        color: dark ? darkCard : lightSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: dark ? Colors.white12 : const Color(0xFFE8E0EE),
@@ -344,7 +343,6 @@ class _RegisterButtonState extends State<_RegisterButton> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {

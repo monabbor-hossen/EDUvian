@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -65,7 +64,7 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
 
   Color _avatarColor(String seed) {
     final colors = [
-      const Color(0xFF6B0032), const Color(0xFF3B1F8F),
+      primaryColor, accentIndigo,
       const Color(0xFFD13D59), const Color(0xFF1E8F6B),
       const Color(0xFF8F1E6B), const Color(0xFF1E6B8F),
       const Color(0xFF8F6B1E), const Color(0xFF3D59D1),
@@ -84,7 +83,7 @@ class _CreateGroupNameScreenState extends ConsumerState<CreateGroupNameScreen> {
   @override
   Widget build(BuildContext context) {
     final dark = isDark(context);
-    final bgColor = dark ? const Color(0xFF0A020C) : Colors.white;
+    final bgColor = dark ? darkBg : Colors.white;
     final textColor = dark ? Colors.white : Colors.black;
     final subtitleColor = dark ? Colors.white54 : Colors.black54;
     final headerColor = dark ? Colors.white12 : const Color(0xFFF3F4F6);

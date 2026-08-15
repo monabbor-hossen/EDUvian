@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/calculator/domain/entities/subject.dart';
 import '../../features/calculator/presentation/providers/calculator_providers.dart';
@@ -54,7 +53,6 @@ class SubjectAutoComplete extends ConsumerWidget {
       },
       displayStringForOption: (Subject option) => '${option.Code} ${option.Title}',
       fieldViewBuilder: (context, controller, focuseNode, onEditingComplete) {
-        final dark = isDark(context);
         return TextField(
           controller: controller,
           focusNode: focuseNode,

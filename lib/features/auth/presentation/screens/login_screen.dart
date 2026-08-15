@@ -139,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 440),
                 decoration: BoxDecoration(
-                  color: dark ? const Color(0xFF1E1E24) : Colors.white,
+                  color: dark ? darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   border: dark ? Border.all(color: Colors.white12) : null,
                   boxShadow: [
@@ -382,7 +382,7 @@ class _AuthTextField extends StatelessWidget {
     final dark = isDark(context);
     return Container(
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF2C2C32) : const Color(0xFFF7F4F8),
+        color: dark ? darkCard : lightSurface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: dark ? Colors.white12 : const Color(0xFFE8E0EE), width: 1.2),
       ),
@@ -434,7 +434,7 @@ class _GoogleSignInButtonState extends State<_GoogleSignInButton> {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
-          color: _hovered ? (dark ? const Color(0xFF3A3A40) : const Color(0xFFF5F5F5)) : (dark ? const Color(0xFF2C2C32) : Colors.white),
+          color: _hovered ? (dark ? const Color(0xFF3A3A40) : const Color(0xFFF5F5F5)) : (dark ? darkCard : Colors.white),
           borderRadius: BorderRadius.circular(50),
           border: Border.all(color: dark ? Colors.white12 : const Color(0xFFDDDDDD), width: 1.5),
           boxShadow: _hovered
@@ -526,7 +526,7 @@ class _GoogleLogoPainter extends CustomPainter {
       );
     }
 
-    final cutPaint = Paint()..color = isDark ? const Color(0xFF2C2C32) : Colors.white;
+    final cutPaint = Paint()..color = isDark ? darkCard : Colors.white;
     canvas.drawRect(
       Rect.fromLTWH(cx, cy - size.height * 0.12, r, size.height * 0.24),
       cutPaint,
@@ -552,7 +552,6 @@ class _SignInButtonState extends State<_SignInButton> {
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {

@@ -40,7 +40,7 @@ class _AppBackgroundState extends State<AppBackground> with SingleTickerProvider
     final size = MediaQuery.of(context).size;
     
     return Scaffold(
-      backgroundColor: dark ? const Color(0xFF0A020C) : const Color(0xFFFAF5F8),
+      backgroundColor: dark ? darkBg : lightBg,
       body: Stack(
         children: [
           // Orb 1: Primary Maroon gradient orb (top right / center)
@@ -75,8 +75,8 @@ class _AppBackgroundState extends State<AppBackground> with SingleTickerProvider
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFF3B1F8F).withValues(alpha: dark ? 0.22 : 0.14),
-                    const Color(0xFF3B1F8F).withValues(alpha: 0),
+                    accentIndigo.withValues(alpha: dark ? 0.22 : 0.14),
+                    accentIndigo.withValues(alpha: 0),
                   ],
                 ),
               ),

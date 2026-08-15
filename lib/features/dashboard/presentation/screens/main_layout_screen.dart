@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -168,7 +167,6 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
 
   Widget _buildNavItem(IconData icon, String label, int index, bool dark) {
     final isSelected = widget.navigationShell.currentIndex == index;
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -207,7 +205,6 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
 
   Widget _buildCenterButton(IconData icon, int index, bool dark) {
     final isSelected = widget.navigationShell.currentIndex == index;
-    const primaryColor = Color.fromRGBO(107, 0, 50, 1);
     
     return GestureDetector(
       onTap: () => _onTap(index),
@@ -220,7 +217,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFEC4899),
+              accentPink,
               primaryColor,
             ],
           ),

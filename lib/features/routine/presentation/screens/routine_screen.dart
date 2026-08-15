@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_background.dart';
@@ -447,7 +446,7 @@ class _DateScrollerState extends State<_DateScroller> {
                           fontWeight: FontWeight.w800,
                           color: isSelected 
                               ? Colors.white 
-                              : (widget.Theme.of(context).colorScheme.onSurface),
+                              : (Theme.of(context).colorScheme.onSurface),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -458,7 +457,7 @@ class _DateScrollerState extends State<_DateScroller> {
                           fontWeight: FontWeight.w600,
                           color: isSelected 
                               ? Colors.white.withValues(alpha: 0.8) 
-                              : (widget.Theme.of(context).extension<AppColorsExtension>()!.textMuted),
+                              : (Theme.of(context).extension<AppColorsExtension>()!.textMuted),
                         ),
                       ),
                     ],
@@ -711,7 +710,7 @@ class _ClassCard extends ConsumerWidget {
                             format12Hour(endTime),
                             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                               fontSize: 11,
-                              color: ongoing ? Colors.white60 : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                              color: ongoing ? Colors.white60 : (Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                             ),
                           ),
                         ],
@@ -976,7 +975,7 @@ class _EmptyDayView extends StatelessWidget {
             'Tap the + button to add a class.',
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(
               fontSize: 14,
-              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -1155,7 +1154,7 @@ void _showClassActionSheet(
                       decoration: InputDecoration(
                         hintText: 'Any class update? e.g. "Canceled"',
                         hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                          color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                         ),
                         filled: true,
                         fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
@@ -1300,7 +1299,7 @@ void _showClassActionSheet(
                         style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.onSurface),
                         decoration: InputDecoration(
                           hintText: 'New Room (e.g. "Online")',
-                          hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5)),
+                          hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5)),
                           filled: true,
                           fillColor: dark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1868,7 +1867,7 @@ class _TimeButton extends StatelessWidget {
                 Text(label,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 10,
-                        color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5))),
+                        color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5))),
                 Text(format12Hour(time),
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                         fontSize: 14,

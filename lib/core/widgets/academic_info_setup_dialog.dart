@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../theme/app_theme.dart';
@@ -292,7 +291,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                           decoration: InputDecoration(
                             hintText: 'John Doe',
                             hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                              color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                             ),
                             errorText: _nameErrorText,
                             filled: true,
@@ -355,7 +354,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                         decoration: InputDecoration(
                           hintText: 'e.g. 7DCSE.2',
                           hintStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                            color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                            color: Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                           ),
                           errorText: _errorText,
                           filled: true,
@@ -424,7 +423,7 @@ class _AcademicInfoSetupDialogState extends State<_AcademicInfoSetupDialog>
                                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color:
-                                          Theme.of(context).extension<AppColorsExtension>()!.textMuted.withOpacity(0.5),
+                                          Theme.of(context).extension<AppColorsExtension>()!.textMuted.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ),
